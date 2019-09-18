@@ -5,23 +5,25 @@ from scipy import stats
 
 def run_knapsack_for_problem_instance(instance, capacity):
     """
-    Gets the problem instances list and the default container capacity.
-    Creates a list of tuples for each item of each problem instance, containing the position (ID) of the item and its size
-    and runs the knapsack problem
+    Gets a specific problem instance and the default container capacity.
+    Creates a list of tuples for each item of each problem instance, containing the value of the item,
+    its size and its position in the list and runs the knapsack problem.
+    Then, monte carlo simulation is executed, based on Bernoulli distribution that defines if an item
+    will be in the knapsack or not. Finally, the profit from the monte carlo simulation is
+    calculated.
     :param instance: a specific problem instance
     :param capacity: the container's capacity
-    :return: the best fitting items
     """
     items = reform_items(instance.items)
     best_value = knapsack_dp(items, capacity, return_all=True)
     item_indices = best_value[0]
-    total_revenue = best_value[1]
+    # total_revenue = best_value[1]
     for i, item in enumerate(instance.items):
         if i in item_indices:
             item.decision_variable = 1
         else:
             item.decision_variable = 0
-    selected_items = [x for x in instance.items if x.decision_variable == 1]
+    # selected_items = [x for x in instance.items if x.decision_variable == 1]
     profits = monte_carlo(instance, capacity)
     m = np.mean(profits)
     print(m)
@@ -35,10 +37,10 @@ def run_knapsack_for_problem_instance(instance, capacity):
 
 def reform_items(items):
     """
-        Creates list of tuples with the values, sizes and indices of the items provided
-        :param items: list of Item objects
-        :return: list of tuples
-        """
+    Creates list of tuples with the values, sizes and indices of the items provided
+    :param items: list of Item objects
+    :return: list of tuples
+    """
     new_items = []
     for j in range(len(items)):
         new_items.append((items[j].r, items[j].size, items[j].position))

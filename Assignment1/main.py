@@ -3,7 +3,6 @@ import utils
 
 
 if __name__ == '__main__':
-    # main()
     # part 1
     instances = part1.generate_problem_instances()
     # part 2 & 3
