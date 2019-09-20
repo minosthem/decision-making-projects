@@ -1,6 +1,5 @@
 import numpy as np
 import utils
-from scipy import stats
 
 
 def run_knapsack_for_problem_instance(instance, capacity):
@@ -51,19 +50,21 @@ def monte_carlo(instance, capacity):
     # monte carlo
     profits = []
     for i in range(int(utils.monte_carlo_runs)):
-        tosses = stats.bernoulli(0.5).rvs(len(instance.items))
+        tosses = utils.bernoulli(0.5, len(instance.items))
         sum_sizes = 0
         count_oversize = 0
         total_revenue_bernoulli = 0
+        total_size_excluded = 0
         for j in tosses:
             if tosses[j] == 1:
                 selected_item = instance.items[j]
                 if sum_sizes + selected_item.size <= capacity:
                     sum_sizes += selected_item.size
-                    total_revenue_bernoulli += selected_item.r
+                    total_revenue_bernoulli += selected_item.r * selected_item.size
                 else:
                     count_oversize += 1
-        profit = utils.profit(total_revenue_bernoulli, count_oversize)
+                    total_size_excluded += selected_item.size
+        profit = utils.profit(total_revenue_bernoulli, total_size_excluded)
         profits.append(profit)
     return profits
 

@@ -1,4 +1,4 @@
-from questions import part2And3, part1
+from questions import part1, part2And3
 import utils
 
 

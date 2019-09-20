@@ -1,13 +1,15 @@
 import numpy as np
-from models.ProblemInstance import ProblemInstance
-from models.Item import Item
+
 import utils
+from models.Item import Item
+from models.ProblemInstance import ProblemInstance
 
 
 def generate_problem_instances():
     """
     Method to generate the requested problem instances with 10 items each.
     For each item, dli, dhi, pi and ri are calculated and saved in the respective fields of the Item object.
+    We run Bernoulli to decide which size (dl or dh) will be assigned to each item.
     All problem instances are save into a list which is then returned to the main program.
     For poisson and triangular distributions, numpy library is used (numpy.random.poisson and numpy.random.triangular)
     in order to generate random numbers for the items' sizes.
@@ -19,17 +21,19 @@ def generate_problem_instances():
         instance = ProblemInstance()
         for j in range(utils.item_num):
             item = Item(j)
-            # calculate d_lj
-            gj = np.random.poisson(lam=(j / 2), size=utils.item_num)[j]
-            item.dl = int(max(gj, 10))
-            # calculate d_hj
-            item.dh = int(generate_triangular_random_numbers(j)[j])
             # calculate pi
             item.pi = 0.5 + (0.05 * j) - 0.001
-            if item.pi <= 0.5:
-                item.size = item.dl
-            else:
+            # run bernoulli to decide the size (l or h)
+            bernoulli_res = utils.bernoulli(item.pi, 1)
+            if bernoulli_res[0] == 1:
+                # calculate d_hj
+                item.dh = int(generate_triangular_random_numbers(j)[j])
                 item.size = item.dh
+            else:
+                # calculate d_lj
+                gj = np.random.poisson(lam=(j / 2), size=utils.item_num)[j]
+                item.dl = int(max(gj, 10))
+                item.size = item.dl
             # calculate r
             item.r = 51 - j
             instance.items.append(item)

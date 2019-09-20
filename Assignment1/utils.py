@@ -1,3 +1,6 @@
+from scipy import stats
+
+
 # global parameters
 GROUP = 10
 runs = 10
@@ -11,5 +14,9 @@ accuracy = 2
 monte_carlo_runs = ((1.96 * (1 / 2)) / (10 ** -accuracy)) ** 2
 
 
-def profit(revenue, items_not_included):
-    return revenue - (penalty * items_not_included)
+def profit(revenue, size_excluded):
+    return revenue - (penalty * size_excluded)
+
+
+def bernoulli(prob, item_size):
+    return stats.bernoulli(prob).rvs(item_size)
