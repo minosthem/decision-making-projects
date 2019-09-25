@@ -23,17 +23,14 @@ def generate_problem_instances():
             item = Item(j)
             # calculate pi
             item.pi = 0.5 + (0.05 * j) - 0.001
+            # calculate d_lj
+            gj = np.random.poisson(lam=(j / 2), size=utils.item_num)[j]
+            item.dl = int(max(gj, 10))
+            # calculate d_hj
+            item.dh = int(generate_triangular_random_numbers(j)[j])
             # run bernoulli to decide the size (l or h)
             bernoulli_res = utils.bernoulli(item.pi, 1)
-            if bernoulli_res[0] == 1:
-                # calculate d_hj
-                item.dh = int(generate_triangular_random_numbers(j)[j])
-                item.size = item.dh
-            else:
-                # calculate d_lj
-                gj = np.random.poisson(lam=(j / 2), size=utils.item_num)[j]
-                item.dl = int(max(gj, 10))
-                item.size = item.dl
+            item.size = item.dh if bernoulli_res[0] == 1 else item.dl
             # calculate r
             item.r = 51 - j
             instance.items.append(item)
