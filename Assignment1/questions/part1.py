@@ -38,7 +38,13 @@ def generate_problem_instances():
             item.r = 51 - j
             instance.items.append(item)
         problem_instances.append(instance)
-    return problem_instances
+    weight_tuples = []
+    for i, problem_instance in enumerate(problem_instances):
+        problem_weights = []
+        for j, item in enumerate(problem_instance.items):
+            problem_weights.append((item.dl, item.dh))
+        weight_tuples.append(problem_weights)
+    return problem_instances, weight_tuples
 
 
 # def generate_poisson_random_numbers(j):
