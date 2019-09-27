@@ -1,5 +1,6 @@
 import numpy as np
 from models.Item import Item
+from models.MonteCarloSim import MonteCarloSim
 import utils
 
 
@@ -21,13 +22,13 @@ def run_knapsack_for_problem_instance(instance, capacity):
     print("Running monte carlo simulation")
     profits = monte_carlo(selected_items, capacity)
     m = np.mean(profits)
-    print(m)
+    print("Profit mean is {}".format(m))
 
     # Construct a confidence interval
     Sn = np.std(profits)
     halfWidth = 1.96 * Sn / np.sqrt(int(utils.monte_carlo_runs))
     ci = (m - halfWidth, m + halfWidth)
-    print(ci)
+    print("Confidence interval is {}".format(ci))
 
 
 def reform_items(items):
@@ -44,8 +45,10 @@ def reform_items(items):
 
 def monte_carlo(selected_items, capacity):
     # monte carlo
+    monte_carlo_runs= []
     profits = []
     for i in range(int(utils.monte_carlo_runs)):
+        monte_carlo_sim = MonteCarloSim(i)
         new_items = []
         for j, old_item in enumerate(selected_items):
             item = Item(j)
@@ -65,7 +68,21 @@ def monte_carlo(selected_items, capacity):
                 count_oversize += 1
                 total_size_excluded += item.size
         profit = utils.profit(total_revenue, total_size_excluded)
+        monte_carlo_sim.items = new_items
+        monte_carlo_sim.profit = profit
+        monte_carlo_runs.append(monte_carlo_sim)
         profits.append(profit)
+    print("Run\t\t\t\t\tItems\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tProfit")
+    print("===================================================================================================")
+    for monte_carlo_sim in monte_carlo_runs:
+        printed = str(monte_carlo_sim.run) + "\t\t"
+        for item in monte_carlo_sim.items:
+            printed += "Item {}: {},".format(str(item.position), str(item.size))
+        printed += "\t\t"
+        printed += str(monte_carlo_sim.profit)
+        printed += "\n"
+        printed += "===================================================================================================\n"
+        print(printed)
     return profits
 
 
