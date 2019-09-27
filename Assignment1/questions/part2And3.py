@@ -43,9 +43,52 @@ def reform_items(items):
     return new_items
 
 
+def knapsack_dp(items, capacity, return_all=False):
+    """
+    Knapsack problem using Dynamic Programming
+    :param items: list of tuples i.e. (value, size, index), where index is the index in the initial list
+    :param capacity: the capacity of the knapsack
+    :param return_all: boolean variable to return the max value and the items or only the items
+    :return: based on return_all value return the items and the max value
+    """
+    values = [x[0] for x in items]
+    weights = [x[1] for x in items]
+    n_items = len(items)
+    check_inputs(values, weights, n_items, capacity)
+
+    table = np.zeros((n_items + 1, capacity + 1), dtype=np.float32)
+    keep = np.zeros((n_items + 1, capacity + 1), dtype=np.float32)
+
+    for i in range(1, n_items + 1):
+        for w in range(0, capacity + 1):
+            wi = weights[i - 1]  # weight of current item
+            vi = values[i - 1]  # value of current item
+            if (wi <= w) and (vi + table[i - 1, w - wi] > table[i - 1, w]):
+                table[i, w] = (vi * wi) + table[i - 1, w - wi]
+                keep[i, w] = 1
+            else:
+                table[i, w] = table[i - 1, w]
+
+    picks = []
+    K = capacity
+
+    for i in range(n_items, 0, -1):
+        if keep[i, K] == 1:
+            picks.append(i)
+            K -= weights[i - 1]
+
+    picks.sort()
+    picks = [x - 1 for x in picks]  # change to 0-index
+
+    if return_all:
+        max_val = table[n_items, capacity]
+        return picks, max_val
+    return picks
+
+
 def monte_carlo(selected_items, capacity):
     # monte carlo
-    monte_carlo_runs= []
+    monte_carlo_runs = []
     profits = []
     for i in range(int(utils.monte_carlo_runs)):
         monte_carlo_sim = MonteCarloSim(i)
@@ -72,61 +115,8 @@ def monte_carlo(selected_items, capacity):
         monte_carlo_sim.profit = profit
         monte_carlo_runs.append(monte_carlo_sim)
         profits.append(profit)
-    print("Run\t\t\t\t\tItems\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tProfit")
-    print("===================================================================================================")
-    for monte_carlo_sim in monte_carlo_runs:
-        printed = str(monte_carlo_sim.run) + "\t\t"
-        for item in monte_carlo_sim.items:
-            printed += "Item {}: {},".format(str(item.position), str(item.size))
-        printed += "\t\t"
-        printed += str(monte_carlo_sim.profit)
-        printed += "\n"
-        printed += "===================================================================================================\n"
-        print(printed)
+    print_monte_carlo_result(monte_carlo_runs)
     return profits
-
-
-def knapsack_dp(items, capacity, return_all=False):
-    """
-    Knapsack problem using Dynamic Programming
-    :param items: list of tuples i.e. (value, size, index), where index is the index in the initial list
-    :param capacity: the capacity of the knapsack
-    :param return_all: boolean variable to return the max value and the items or only the items
-    :return: based on return_all value return the items and the max value
-    """
-    values = [x[0] for x in items]
-    weights = [x[1] for x in items]
-    n_items = len(items)
-    check_inputs(values, weights, n_items, capacity)
-
-    table = np.zeros((n_items + 1, capacity + 1), dtype=np.float32)
-    keep = np.zeros((n_items + 1, capacity + 1), dtype=np.float32)
-
-    for i in range(1, n_items + 1):
-        for w in range(0, capacity + 1):
-            wi = weights[i - 1]  # weight of current item
-            vi = values[i - 1]  # value of current item
-            if (wi <= w) and (vi + table[i - 1, w - wi] > table[i - 1, w]):
-                table[i, w] = (vi* wi) + table[i - 1, w - wi]
-                keep[i, w] = 1
-            else:
-                table[i, w] = table[i - 1, w]
-
-    picks = []
-    K = capacity
-
-    for i in range(n_items, 0, -1):
-        if keep[i, K] == 1:
-            picks.append(i)
-            K -= weights[i - 1]
-
-    picks.sort()
-    picks = [x - 1 for x in picks]  # change to 0-index
-
-    if return_all:
-        max_val = table[n_items, capacity]
-        return picks, max_val
-    return picks
 
 
 def get_knapsack_result(best_value, items):
@@ -154,3 +144,18 @@ def check_inputs(values, weights, n_items, capacity):
     assert (all(val >= 0 for val in weights))
     assert (n_items > 0)
     assert (capacity > 0)
+
+
+def print_monte_carlo_result(monte_carlo_runs):
+    print("Run\t\t\t\t\tItems\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tProfit")
+    print("===================================================================================================")
+    for monte_carlo_sim in monte_carlo_runs:
+        printed = str(monte_carlo_sim.run) + "\t\t"
+        for item in monte_carlo_sim.items:
+            printed += "Item {}: {},".format(str(item.position), str(item.size))
+        printed += "\t\t"
+        printed += str(monte_carlo_sim.profit)
+        printed += "\n"
+        printed += "===================================================================================================\n"
+        print(printed)
+
