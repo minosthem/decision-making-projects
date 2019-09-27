@@ -90,7 +90,7 @@ def knapsack_dp(items, capacity, return_all=False):
             wi = weights[i - 1]  # weight of current item
             vi = values[i - 1]  # value of current item
             if (wi <= w) and (vi + table[i - 1, w - wi] > table[i - 1, w]):
-                table[i, w] = vi + table[i - 1, w - wi]
+                table[i, w] = (vi* wi) + table[i - 1, w - wi]
                 keep[i, w] = 1
             else:
                 table[i, w] = table[i - 1, w]
