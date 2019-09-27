@@ -1,4 +1,5 @@
 import numpy as np
+from models.Item import Item
 import utils
 
 
@@ -15,15 +16,8 @@ def run_knapsack_for_problem_instance(instance, capacity):
     """
     items = reform_items(instance.items)
     best_value = knapsack_dp(items, capacity, return_all=True)
-    item_indices = best_value[0]
-    # total_revenue = best_value[1]
-    for i, item in enumerate(instance.items):
-        if i in item_indices:
-            item.decision_variable = 1
-        else:
-            item.decision_variable = 0
-    # selected_items = [x for x in instance.items if x.decision_variable == 1]
-    profits = monte_carlo(instance, capacity)
+    selected_items, total_revenue = get_knapsack_result(best_value, instance.items)
+    profits = monte_carlo(selected_items, capacity)
     m = np.mean(profits)
     print(m)
 
@@ -46,25 +40,29 @@ def reform_items(items):
     return new_items
 
 
-def monte_carlo(instance, capacity):
+def monte_carlo(selected_items, capacity):
     # monte carlo
     profits = []
     for i in range(int(utils.monte_carlo_runs)):
-        tosses = utils.bernoulli(0.5, len(instance.items))
+        new_items = []
+        for j, old_item in enumerate(selected_items):
+            item = Item(j)
+            item.copy_item(old_item)
+            bernoulli_res = utils.bernoulli(item.pi, 1)
+            item.size = item.dh if bernoulli_res[0] == 1 else item.dl
+            new_items.append(item)
         sum_sizes = 0
+        total_revenue = 0
         count_oversize = 0
-        total_revenue_bernoulli = 0
         total_size_excluded = 0
-        for j in tosses:
-            if tosses[j] == 1:
-                selected_item = instance.items[j]
-                if sum_sizes + selected_item.size <= capacity:
-                    sum_sizes += selected_item.size
-                    total_revenue_bernoulli += selected_item.r * selected_item.size
-                else:
-                    count_oversize += 1
-                    total_size_excluded += selected_item.size
-        profit = utils.profit(total_revenue_bernoulli, total_size_excluded)
+        for j, item in enumerate(new_items):
+            if sum_sizes + item.size <= capacity:
+                sum_sizes += item.size
+                total_revenue += item.r * item.size
+            else:
+                count_oversize += 1
+                total_size_excluded += item.size
+        profit = utils.profit(total_revenue, total_size_excluded)
         profits.append(profit)
     return profits
 
@@ -110,6 +108,18 @@ def knapsack_dp(items, capacity, return_all=False):
         max_val = table[n_items, capacity]
         return picks, max_val
     return picks
+
+
+def get_knapsack_result(best_value, items):
+    item_indices = best_value[0]
+    total_revenue = best_value[1]
+    for i, item in enumerate(items):
+        if i in item_indices:
+            item.decision_variable = 1
+        else:
+            item.decision_variable = 0
+    selected_items = [x for x in items if x.decision_variable == 1]
+    return selected_items, total_revenue
 
 
 def check_inputs(values, weights, n_items, capacity):

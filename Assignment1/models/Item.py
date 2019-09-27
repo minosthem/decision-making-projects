@@ -22,3 +22,10 @@ class Item:
             raise Exception("Provide a valid i in")
         else:
             self.position = position
+
+    def copy_item(self, item):
+        self.pi = item.pi
+        self.r = item.r
+        self.position = item.position
+        self.dl = item.dl
+        self.dh = item.dh

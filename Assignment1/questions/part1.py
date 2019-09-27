@@ -44,25 +44,6 @@ def generate_problem_instances():
     return problem_instances, weight_tuples
 
 
-# def generate_poisson_random_numbers(j):
-#     random_numbers = []
-#     i = 0
-#     lamda = j / 2
-#     poisson = np.random.poisson(lam=(j / 2))
-#     u = np.random.uniform(size=runs)
-#     p = math.exp(-lamda)
-#     F = p
-#     for count in range(runs):
-#         if u < F:
-#             x = i
-#             random_numbers.append(x)
-#         else:
-#             p = (lamda / (i + 1)) * p
-#             F = F + p
-#             i += 1
-#     return random_numbers
-
-
 def generate_triangular_random_numbers(j):
     """
     Method that generates random numbers using triangular distribution.
