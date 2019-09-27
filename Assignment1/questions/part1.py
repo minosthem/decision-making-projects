@@ -16,7 +16,7 @@ def generate_problem_instances():
     :return: a list with all the generated problem instances
     """
     problem_instances = []
-
+    print("Generating problem instances with items")
     for i in range(utils.runs):
         instance = ProblemInstance()
         for j in range(utils.item_num):
@@ -31,12 +31,13 @@ def generate_problem_instances():
             # run bernoulli to decide the size (l or h)
             # bernoulli_res = utils.bernoulli(item.pi, 1)
             # item.size = item.dh if bernoulli_res[0] == 1 else item.dl
-            item.size = (item.pi * item.dh) + ((1 - item.pi) * item.dl)
+            item.size = int((item.pi * item.dh) + ((1 - item.pi) * item.dl))
             # calculate r
             item.r = 51 - j
             instance.items.append(item)
         problem_instances.append(instance)
     weight_tuples = []
+    print("Create list with (dl, dh) tuples of each item of each problem instance")
     for i, problem_instance in enumerate(problem_instances):
         problem_weights = []
         for j, item in enumerate(problem_instance.items):

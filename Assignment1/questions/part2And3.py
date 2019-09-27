@@ -14,9 +14,11 @@ def run_knapsack_for_problem_instance(instance, capacity):
     :param instance: a specific problem instance
     :param capacity: the container's capacity
     """
+    print("Executing Knapsack problem")
     items = reform_items(instance.items)
     best_value = knapsack_dp(items, capacity, return_all=True)
     selected_items, total_revenue = get_knapsack_result(best_value, instance.items)
+    print("Running monte carlo simulation")
     profits = monte_carlo(selected_items, capacity)
     m = np.mean(profits)
     print(m)
