@@ -5,6 +5,7 @@ class Item:
     the final selected size based on the pi field (i.e. the size field) and finally the r field
     """
     size = 0
+    selected_size = "dl"
     dl = 0
     dh = 0
     position = 0

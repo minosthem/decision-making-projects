@@ -8,4 +8,4 @@ if __name__ == '__main__':
     # part 2 & 3
     part2And3.run_knapsack_for_problem_instance(instances[0], utils.capacity)
     # part 4 & 5
-    part5.run_gurobipy()
+    part5.run_gurobipy(instances)
