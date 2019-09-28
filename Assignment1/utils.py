@@ -11,7 +11,6 @@ penalty = 60 + (GROUP / 10)
 risk = {"EN": 0, "CVaR": 0.95}
 confidence_interval = 0.95
 accuracy = 2
-monte_carlo_runs = ((1.96 * (1 / 2)) / (10 ** -accuracy)) ** 2
 
 
 def profit(revenue, size_excluded):
