@@ -8,23 +8,32 @@ import utils
 def run_gurobipy(problem_instances):
     for i, problem_instance in enumerate(problem_instances):
         model = gb.Model('MILP')
+        item_indx = list(range(10))
         senarios = get_all_combinations()
         new_senarios, revenues, new_decision_combs, probabilities = get_model_data(senarios, problem_instance.items)
         obj = gb.LinExpr()
-        for j, senario in enumerate(senarios):
-            sizes = model.addVars(10, vtype=gb.GRB.CONTINUOUS, name="sizes", lb=0)
-            revs = model.addVars(10, vtype=gb.GRB.CONTINUOUS, name="revs", lb=0)
-            decision_vars = model.addVars(10, vtype=gb.GRB.BINARY, name="decision_var")
-            for k in range(10):
-                obj += senario[k] * sizes[k]
-                pass
-            for k in range(10):
-                obj += revenues[k] * revs[k]
-            for k in range(10):
-                obj += new_decision_combs[j][k] * decision_vars[k]
+        for j, senario in enumerate(new_senarios):
+            senario_obj = gb.LinExpr()
+            sizes = model.addVars(item_indx, vtype=gb.GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
+
             total_size = total_selected_size(senario, new_decision_combs[j])
+            tu = total_size - utils.capacity
+            for k in item_indx:
+                senario_obj += sizes[k] * (senario[k] * revenues[k] * new_decision_combs[j][k])
             if total_size > utils.capacity:
-                obj -= (utils.penalty * (total_size - utils.capacity))
+                senario_obj -= utils.penalty * (total_size - utils.capacity)
+            senario_obj *= probabilities[j]
+            model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=total_size, name="scenario{}".format(j))
+            model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
+            obj.add(senario_obj)
+        model.setObjective(obj, gb.GRB.MAXIMIZE)
+        model.update()
+        model.optimize()
+
+        for v in model.getVars():
+            print('%s %g' % (v.varName, v.X))
+        obj = model.getObjective()
+        print('Profit: %g' % -obj.getValue())
 
 
 def get_all_combinations():
