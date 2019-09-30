@@ -1,7 +1,6 @@
 from itertools import product
 from gurobipy import GRB, Model, LinExpr
 import utils
-import numpy as np
 
 
 def run_gurobi(problem_instances):
@@ -15,22 +14,29 @@ def run_gurobi(problem_instances):
         obj = LinExpr()
 
         for j, scenario in enumerate(scenarios):
-            sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
-            decision_var = model.addVars(item_indx, vtype=GRB.BINARY, name="decisionvar{}".format(j), lb=0)
-            total_size_selected = total_selected_size(scenario, decision_combs[j])
-            # TODO check decision variables - how to provide them to the obj
-            scenario_obj = probabilities[j] * (sum(sizes[k] * revenues[k] * decision_combs[j][k] for k in item_indx) - (
-                    utils.penalty * (total_size_selected - utils.capacity)))
-            model.addConstr(
-                ((sum(sizes[k]) - utils.capacity) >= (sum(sizes[k] * decision_var[k]) - utils.capacity) for k
-                 in range(len(item_indx))), name="scenario{}".format(j))
-            model.addConstr(((sum(sizes[k]) - utils.capacity) >= 0 for k in
-                             range(len(item_indx))), name="scenarioPositive{}".format(j))
-            # model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size_selected, name="scenario{}".format(j))
-            # model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
-            obj.add(scenario_obj)
+            for z, decision_var in decision_combs:
+                # create model variable for scenario j and decision var vector z
+                sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}{}".format(j, z), lb=0)
+                # calculate the total selected size based on the decision variables
+                total_size_selected = total_selected_size(scenario, decision_var)
+                # calculate the penalty based on the capacity and selected weights
+                final_penalty = utils.penalty * (total_size_selected - utils.capacity)
+                # calculate the objective function of the current scenario and decision var vector
+                scenario_obj = probabilities[j] * (sum(sizes[k] * revenues[k] * decision_var[k]
+                                                       for k in item_indx) - final_penalty)
+                # add constraints for this scenario
+                model.addConstr(
+                    ((sum(sizes[k]) - utils.capacity) >= (sum(sizes[k] * decision_var[k]) - utils.capacity) for k
+                     in range(len(item_indx))), name="scenario{}{}".format(j, z))
+                model.addConstr(((sum(sizes[k]) - utils.capacity) >= 0 for k in
+                                 range(len(item_indx))), name="scenarioPositive{}{}".format(j, z))
+                # add the objective function to the model's total objective function
+                obj.add(scenario_obj)
+        # set the objective function to the model
         model.setObjective(obj, GRB.MAXIMIZE)
+        # update the model
         model.update()
+        # optimize the model
         model.optimize()
 
         # TODO check why x attribute cannot be accessed
