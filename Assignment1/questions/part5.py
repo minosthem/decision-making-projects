@@ -1,6 +1,7 @@
 from itertools import product
 from gurobipy import GRB, Model, LinExpr
 import utils
+import numpy as np
 
 
 def run_gurobi(problem_instances):
@@ -16,16 +17,16 @@ def run_gurobi(problem_instances):
         for j, scenario in enumerate(scenarios):
             scenario_obj = LinExpr()
             sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
-            # TODO fix total_size and tu
             # TODO check decision variables - how to provide them to the obj
-            total_size = total_selected_size(scenario, decision_combs[j])
+            total_size = np.sum(scenario)
+            total_size_selected = total_selected_size(scenario, decision_combs[j])
             tu = total_size - utils.capacity
             for k in item_indx:
                 scenario_obj += sizes[k] * (scenario[k] * revenues[k] * decision_combs[j][k])
-            if total_size > utils.capacity:
-                scenario_obj -= utils.penalty * (total_size - utils.capacity)
+            if total_size_selected > utils.capacity:
+                scenario_obj -= utils.penalty * (total_size_selected - utils.capacity)
             scenario_obj *= probabilities[j]
-            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size, name="scenario{}".format(j))
+            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size_selected, name="scenario{}".format(j))
             model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
             obj.add(scenario_obj)
         model.setObjective(obj, GRB.MAXIMIZE)
