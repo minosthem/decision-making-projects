@@ -9,7 +9,7 @@ def generate_problem_instances():
     """
     Method to generate the requested problem instances with 10 items each.
     For each item, dli, dhi, pi and ri are calculated and saved in the respective fields of the Item object.
-    We run Bernoulli to decide which size (dl or dh) will be assigned to each item.
+    In order to decide the item size, we combine dl, dh and their probabilities
     All problem instances are save into a list which is then returned to the main program.
     For poisson and triangular distributions, numpy library is used (numpy.random.poisson and numpy.random.triangular)
     in order to generate random numbers for the items' sizes.
@@ -34,7 +34,7 @@ def generate_problem_instances():
             item.r = 51 - j
             instance.items.append(item)
         problem_instances.append(instance)
-    return problem_instances, generate_dl_dh_table(problem_instances)
+    return problem_instances
 
 
 def generate_triangular_random_numbers(j):
