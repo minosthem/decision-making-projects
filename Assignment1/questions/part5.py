@@ -14,7 +14,7 @@ def run_gurobi(problem_instances):
         obj = LinExpr()
 
         for j, scenario in enumerate(scenarios):
-            for z, decision_var in decision_combs:
+            for z, decision_var in enumerate(decision_combs):
                 # create model variable for scenario j and decision var vector z
                 sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}{}".format(j, z), lb=0)
                 # calculate the total selected size based on the decision variables
@@ -22,27 +22,29 @@ def run_gurobi(problem_instances):
                 # calculate the penalty based on the capacity and selected weights
                 final_penalty = utils.penalty * (total_size_selected - utils.capacity)
                 # calculate the objective function of the current scenario and decision var vector
-                scenario_obj = probabilities[j] * (sum(sizes[k] * revenues[k] * decision_var[k]
+                scenario_obj = probabilities[j] * (sum(sizes[k] * scenario[k] * revenues[k] * decision_var[k]
                                                        for k in item_indx) - final_penalty)
-                # add constraints for this scenario
-                model.addConstr(
-                    ((sum(sizes[k]) - utils.capacity) >= (sum(sizes[k] * decision_var[k]) - utils.capacity) for k
-                     in range(len(item_indx))), name="scenario{}{}".format(j, z))
-                model.addConstr(((sum(sizes[k]) - utils.capacity) >= 0 for k in
-                                 range(len(item_indx))), name="scenarioPositive{}{}".format(j, z))
+                rhs = total_size_selected - utils.capacity
+                model.addConstr(lhs=sum(sizes) - utils.capacity, sense=GRB.GREATER_EQUAL, rhs=rhs,
+                                name="scenario{}{}".format(j, z))
+                model.addConstr(lhs=sum(sizes) - utils.capacity, sense=GRB.GREATER_EQUAL, rhs=0,
+                                name="scenarioPositive{}{}".format(j, z))
                 # add the objective function to the model's total objective function
                 obj.add(scenario_obj)
         # set the objective function to the model
+        print("Setting total objective function to model {}".format(i))
         model.setObjective(obj, GRB.MAXIMIZE)
+        print("Updating model {}".format(i))
         # update the model
         model.update()
+        print("Optimizing model {}".format(i))
         # optimize the model
         model.optimize()
 
         # TODO check why x attribute cannot be accessed
         print("Showing variables and objective function values for problem instance {}".format(i))
         for v in model.getVars():
-            print('%s %g' % (v.varName, v.X))
+            print('%s %g' % (v.varName, v.x))
         obj = model.getObjective()
         print('Profit: %g' % -obj.getValue())
 
@@ -58,8 +60,8 @@ def get_model_data(items):
     decision variables and the probabilities
     """
     new_scenarios = []
-    scenarios = list(product(['dl', 'dh'], repeat=10))
-    decision_combs = list(product([0, 1], repeat=10))
+    scenarios = list(product(['dl', 'dh'], repeat=len(items)))
+    decision_combs = list(product([0, 1], repeat=len(items)))
     new_decision_combs = []
     revenues = [item.r for item in items]
     probabilities = []
@@ -89,6 +91,6 @@ def total_selected_size(sizes, decision_vars):
     """
     total_size = 0
     for i, decision_var in enumerate(decision_vars):
-        if decision_var == 1.0:
+        if decision_var == 1.0 or decision_var == 1:
             total_size += sizes[i]
     return total_size
