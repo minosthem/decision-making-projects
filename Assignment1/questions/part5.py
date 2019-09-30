@@ -15,19 +15,19 @@ def run_gurobi(problem_instances):
         obj = LinExpr()
 
         for j, scenario in enumerate(scenarios):
-            scenario_obj = LinExpr()
             sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
-            # TODO check decision variables - how to provide them to the obj
-            total_size = np.sum(scenario)
+            decision_var = model.addVars(item_indx, vtype=GRB.BINARY, name="decisionvar{}".format(j), lb=0)
             total_size_selected = total_selected_size(scenario, decision_combs[j])
-            tu = total_size - utils.capacity
-            for k in item_indx:
-                scenario_obj += sizes[k] * (scenario[k] * revenues[k] * decision_combs[j][k])
-            if total_size_selected > utils.capacity:
-                scenario_obj -= utils.penalty * (total_size_selected - utils.capacity)
-            scenario_obj *= probabilities[j]
-            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size_selected, name="scenario{}".format(j))
-            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
+            # TODO check decision variables - how to provide them to the obj
+            scenario_obj = probabilities[j] * (sum(sizes[k] * revenues[k] * decision_combs[j][k] for k in item_indx) - (
+                    utils.penalty * (total_size_selected - utils.capacity)))
+            model.addConstr(
+                ((sum(sizes[k]) - utils.capacity) >= (sum(sizes[k] * decision_var[k]) - utils.capacity) for k
+                 in range(len(item_indx))), name="scenario{}".format(j))
+            model.addConstr(((sum(sizes[k]) - utils.capacity) >= 0 for k in
+                             range(len(item_indx))), name="scenarioPositive{}".format(j))
+            # model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size_selected, name="scenario{}".format(j))
+            # model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
             obj.add(scenario_obj)
         model.setObjective(obj, GRB.MAXIMIZE)
         model.update()
