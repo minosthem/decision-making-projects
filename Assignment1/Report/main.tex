@@ -1,0 +1,127 @@
+\documentclass[12pt]{article}
+
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks,
+	citecolor=blue,
+	%filecolor=black,
+	linkcolor=black,
+	urlcolor=blue
+}
+\usepackage{float}
+\usepackage[english]{babel}
+\usepackage[square,numbers]{natbib}
+\bibliographystyle{abbrvnat}
+\usepackage{url}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\graphicspath{{images/}}
+%\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\setmarginsrb{3 cm}{2.5 cm}{3 cm}{2.5 cm}{1 cm}{1.5 cm}{1 cm}{1.5 cm}
+\usepackage[table]{xcolor}
+\usepackage{todonotes}
+\usepackage{menukeys}
+\usepackage[toc,page]{appendix}
+\usepackage{indentfirst}
+
+\setlength\parindent{24pt}
+
+\title{Assignment 1}   
+% Title
+\author{ Dafni Lappa, 2032943 \\
+	Epaminondas - Spyridon Themelis, 2030983}                               % Authors
+\date{\today}                                           % Date
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+%\rhead{\theauthor}
+\lhead{\thetitle}
+\cfoot{\thepage}
+
+\begin{document}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+	\begin{titlepage}
+		\centering
+		\vspace*{0.5 cm}
+		\includegraphics[scale = 0.75]{logo.png}\\[1.0 cm]   % University Logo
+		\textsc{\LARGE Tilburg University}\\[2.0 cm]   % University Name
+		\textsc{\Large M.Sc. Business Analytics and Operations Research}\\[0.5 cm]               % Department
+		\textsc{\large Decision Making under Uncertainty}\\[0.5 cm]               % Course Name
+		\rule{\linewidth}{0.2 mm} \\[0.4 cm]
+		{ \huge \bfseries \thetitle}\\
+		\rule{\linewidth}{0.2 mm} \\[1.5 cm]
+		
+		\begin{minipage}{0.4\textwidth}
+			\begin{center} \large
+				\theauthor
+			\end{center}
+		\end{minipage}~
+		\begin{minipage}{0.4\textwidth}
+		\end{minipage}\\[2 cm]
+		
+		{\large \thedate}\\[2 cm]
+		
+		\vfill
+		
+	\end{titlepage}
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+	\tableofcontents
+	\newpage
+	\listoffigures
+	\newpage
+	\listoftables
+	\newpage
+	
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+	\section{Introduction}
+	
+	Our team (group 10) members are Dafni Lappa and Epameinondas-Spyridon Themelis. We implemented the assignment in Python 3.7, using numpy, scipy, gurobipy libraries among others. The code is available in our GitHub repository\footnote{https://github.com/minosthem/decision-making-projects}. In the following sections, we will provide an in depth analysis of our implementation and explanations on our results.
+
+    \section{Knapsack problem and Monte Carlo simulation}
+    
+    \subsection{Part 1 - Generation of Problem Instances}
+
+    \subsection{Part 2 - Heuristic Algorithm}
+    
+    \subsection{Part 3 - Monte Carlo Simulation}
+    
+    \section{Stochastic Programming Models}
+    
+    \subsection{Part 4 - Our model}
+    
+    \subsection{Part 5 - Run our model with gurobi}
+    
+    \subsection{Part 6}
+    
+    \section{Sample Average Approximation - Part 7}
+    
+    \section{Analysis}
+    
+    \subsection{Part 8}
+    
+    \subsection{Part 9}
+    
+    \subsection{Bonus}
+    
+	\begin{appendices}
+    
+        \section{Appendix A}
+        
+    \end{appendices}
+\end{document}
