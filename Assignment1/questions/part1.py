@@ -28,9 +28,7 @@ def generate_problem_instances():
             item.dl = int(max(gj, 10))
             # calculate d_hj
             item.dh = int(generate_triangular_random_numbers(j)[j])
-            # run bernoulli to decide the size (l or h)
-            # bernoulli_res = utils.bernoulli(item.pi, 1)
-            # item.size = item.dh if bernoulli_res[0] == 1 else item.dl
+            # define item size based on dl, dh and their probabilities
             item.size = int((item.pi * item.dh) + ((1 - item.pi) * item.dl))
             # calculate r
             item.r = 51 - j
