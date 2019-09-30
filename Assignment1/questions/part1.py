@@ -36,14 +36,7 @@ def generate_problem_instances():
             item.r = 51 - j
             instance.items.append(item)
         problem_instances.append(instance)
-    weight_tuples = []
-    print("Create list with (dl, dh) tuples of each item of each problem instance")
-    for i, problem_instance in enumerate(problem_instances):
-        problem_weights = []
-        for j, item in enumerate(problem_instance.items):
-            problem_weights.append((item.dl, item.dh))
-        weight_tuples.append(problem_weights)
-    return problem_instances, weight_tuples
+    return problem_instances, generate_dl_dh_table(problem_instances)
 
 
 def generate_triangular_random_numbers(j):
@@ -58,3 +51,15 @@ def generate_triangular_random_numbers(j):
     mode = 100 + utils.GROUP - j
     right = 110 + utils.GROUP - j
     return np.random.triangular(left=left, mode=mode, right=right, size=utils.item_num)
+
+
+# TODO maybe delete the below completely
+def generate_dl_dh_table(problem_instances):
+    weight_tuples = []
+    print("Create list with (dl, dh) tuples of each item of each problem instance")
+    for i, problem_instance in enumerate(problem_instances):
+        problem_weights = []
+        for j, item in enumerate(problem_instance.items):
+            problem_weights.append((item.dl, item.dh))
+        weight_tuples.append(problem_weights)
+    return weight_tuples
