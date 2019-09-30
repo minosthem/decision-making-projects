@@ -1,35 +1,40 @@
 from itertools import product
 
-import gurobipy as gb
+from gurobipy import GRB, Model, LinExpr
 
 import utils
 
 
-def run_gurobipy(problem_instances):
+def run_gurobi(problem_instances):
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
-        print("Creating model for problem instance {}".format(i))
-        model = gb.Model('MILP')
         item_indx = list(range(len(problem_instance.items)))
         scenarios, revenues, decision_combs, probabilities = get_model_data(problem_instance.items)
-        obj = gb.LinExpr()
+
+        print("Creating model for problem instance {}".format(i))
+        model = Model('MILP')
+        obj = LinExpr()
+
         for j, scenario in enumerate(scenarios):
-            senario_obj = gb.LinExpr()
-            sizes = model.addVars(item_indx, vtype=gb.GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
+            scenario_obj = LinExpr()
+            sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}".format(j), lb=0)
+            # TODO fix total_size and tu
+            # TODO check decision variables - how to provide them to the obj
             total_size = total_selected_size(scenario, decision_combs[j])
             tu = total_size - utils.capacity
             for k in item_indx:
-                senario_obj += sizes[k] * (scenario[k] * revenues[k] * decision_combs[j][k])
+                scenario_obj += sizes[k] * (scenario[k] * revenues[k] * decision_combs[j][k])
             if total_size > utils.capacity:
-                senario_obj -= utils.penalty * (total_size - utils.capacity)
-            senario_obj *= probabilities[j]
-            model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=total_size, name="scenario{}".format(j))
-            model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
-            obj.add(senario_obj)
-        model.setObjective(obj, gb.GRB.MAXIMIZE)
+                scenario_obj -= utils.penalty * (total_size - utils.capacity)
+            scenario_obj *= probabilities[j]
+            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=total_size, name="scenario{}".format(j))
+            model.addConstr(lhs=tu, sense=GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}".format(j))
+            obj.add(scenario_obj)
+        model.setObjective(obj, GRB.MAXIMIZE)
         model.update()
         model.optimize()
 
+        # TODO check why x attribute cannot be accessed
         print("Showing variables and objective function values for problem instance {}".format(i))
         for v in model.getVars():
             print('%s %g' % (v.varName, v.X))
@@ -48,53 +53,25 @@ def get_model_data(items):
     decision variables and the probabilities
     """
     new_scenarios = []
-    senarios = get_all_combinations()
-    decision_combs = get_decision_combinations()
+    scenarios = list(product(['dl', 'dh'], repeat=10))
+    decision_combs = list(product([0, 1], repeat=10))
     new_decision_combs = []
-    revenues = get_item_revenues_vector(items)
+    revenues = [item.r for item in items]
     probabilities = []
-    for i, senario in enumerate(senarios):
-        new_senario = {}
+    for i, scenario in enumerate(scenarios):
+        new_scenario = {}
         dec = decision_combs[i]
         decision_vars = {}
-        senario_prob = 1
+        scenario_prob = 1
         for j, item in enumerate(items):
-            new_senario[j] = item.dl if senario[j] == 'dl' else item.dh
+            new_scenario[j] = item.dl if scenario[j] == 'dl' else item.dh
             decision_vars[j] = dec[j]
-            prob = item.pi if senario[j] == 'dh' else (1 - item.pi)
-            senario_prob *= prob
-        new_scenarios.append(new_senario)
+            prob = item.pi if scenario[j] == 'dh' else (1 - item.pi)
+            scenario_prob *= prob
+        new_scenarios.append(new_scenario)
         new_decision_combs.append(decision_vars)
-        probabilities.append(senario_prob)
+        probabilities.append(scenario_prob)
     return new_scenarios, revenues, new_decision_combs, probabilities
-
-
-def get_all_combinations():
-    """
-    Uses product function from itertools to create all combinations of dl and dh
-    for the ten items of each problem instance
-    :return: the combinations
-    """
-    return list(product(['dl', 'dh'], repeat=10))
-
-
-def get_decision_combinations():
-    """
-    Uses product function from itertools to generate all
-    possible combinations of values 0 and 1 for the 10 items
-    of each problem instance
-    :return: the list of the combinations
-    """
-    return list(product([0, 1], repeat=10))
-
-
-def get_item_revenues_vector(items):
-    """
-    Creates a list with the revenue of each item
-    :param items: the problem instance items
-    :return: list with the respective revenues
-    """
-    return [item.r for item in items]
 
 
 def total_selected_size(sizes, decision_vars):
