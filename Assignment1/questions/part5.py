@@ -1,7 +1,5 @@
 from itertools import product
-
 from gurobipy import GRB, Model, LinExpr
-
 import utils
 
 
