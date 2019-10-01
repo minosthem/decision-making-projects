@@ -24,8 +24,10 @@ def run_gurobi(problem_instances):
                 final_penalty = utils.penalty * (total_size_selected - utils.capacity)
                 # calculate the objective function of the current scenario and decision var vector
                 obj += probabilities[j] * (sum((scenario[k] * revenues[k] * decision_var[k]) * sizes[k]
-                                               for k in item_indx) - final_penalty)
+                                               for k in item_indx) - final_penalty if final_penalty > 0 else sum(
+                    (scenario[k] * revenues[k] * decision_var[k]) * sizes[k] for k in item_indx))
                 rhs = total_size_selected - utils.capacity
+                # TODO unbounded model??
                 model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
                                 sense=gb.GRB.GREATER_EQUAL, rhs=rhs, name="scenario{}{}".format(j, z))
                 model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,

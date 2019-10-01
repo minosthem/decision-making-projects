@@ -1,8 +1,12 @@
 from questions import part1, part2And3, part5
 import utils
+import os
+from os.path import exists
 
 
 def main():
+    if not exists(utils.output_folder):
+        os.mkdir(utils.output_folder)
     # part 1
     instances = part1.generate_problem_instances()
     # part 2 & 3
