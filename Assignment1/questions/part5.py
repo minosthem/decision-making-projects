@@ -1,5 +1,5 @@
 from itertools import product
-from gurobipy import GRB, Model, LinExpr
+import gurobipy as gb
 import utils
 
 
@@ -10,31 +10,28 @@ def run_gurobi(problem_instances):
         scenarios, revenues, decision_combs, probabilities = get_model_data(problem_instance.items)
 
         print("Creating model for problem instance {}".format(i))
-        model = Model('MILP')
-        obj = LinExpr()
+        model = gb.Model('MILP')
+        obj = gb.LinExpr()
 
         for j, scenario in enumerate(scenarios):
             for z, decision_var in enumerate(decision_combs):
-                scenario_obj = LinExpr()
                 # create model variable for scenario j and decision var vector z
-                sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}{}".format(j, z), lb=0)
+                sizes = model.addVars(item_indx, vtype=gb.GRB.CONTINUOUS, name="sizes{}{}".format(j, z), lb=0)
                 # calculate the total selected size based on the decision variables
                 total_size_selected = total_selected_size(scenario, decision_var)
                 # calculate the penalty based on the capacity and selected weights
                 final_penalty = utils.penalty * (total_size_selected - utils.capacity)
                 # calculate the objective function of the current scenario and decision var vector
-                scenario_obj += probabilities[j] * (sum(sizes[k] * scenario[k] * revenues[k] * decision_var[k]
-                                                       for k in item_indx) - final_penalty)
+                obj += probabilities[j] * (sum((scenario[k] * revenues[k] * decision_var[k]) * sizes[k]
+                                               for k in item_indx) - final_penalty)
                 rhs = total_size_selected - utils.capacity
-                model.addConstr(lhs=sum(sizes) - utils.capacity, sense=GRB.GREATER_EQUAL, rhs=rhs,
-                                name="scenario{}{}".format(j, z))
-                model.addConstr(lhs=sum(sizes) - utils.capacity, sense=GRB.GREATER_EQUAL, rhs=0,
-                                name="scenarioPositive{}{}".format(j, z))
-                # add the objective function to the model's total objective function
-                obj.add(scenario_obj)
+                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
+                                sense=gb.GRB.GREATER_EQUAL, rhs=rhs, name="scenario{}{}".format(j, z))
+                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
+                                sense=gb.GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}{}".format(j, z))
         # set the objective function to the model
         print("Setting total objective function to model {}".format(i))
-        model.setObjective(obj, GRB.MAXIMIZE)
+        model.setObjective(obj, gb.GRB.MAXIMIZE)
         print("Updating model {}".format(i))
         # update the model
         model.update()
