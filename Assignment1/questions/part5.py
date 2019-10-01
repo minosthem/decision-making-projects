@@ -15,6 +15,7 @@ def run_gurobi(problem_instances):
 
         for j, scenario in enumerate(scenarios):
             for z, decision_var in enumerate(decision_combs):
+                scenario_obj = LinExpr()
                 # create model variable for scenario j and decision var vector z
                 sizes = model.addVars(item_indx, vtype=GRB.CONTINUOUS, name="sizes{}{}".format(j, z), lb=0)
                 # calculate the total selected size based on the decision variables
@@ -22,7 +23,7 @@ def run_gurobi(problem_instances):
                 # calculate the penalty based on the capacity and selected weights
                 final_penalty = utils.penalty * (total_size_selected - utils.capacity)
                 # calculate the objective function of the current scenario and decision var vector
-                scenario_obj = probabilities[j] * (sum(sizes[k] * scenario[k] * revenues[k] * decision_var[k]
+                scenario_obj += probabilities[j] * (sum(sizes[k] * scenario[k] * revenues[k] * decision_var[k]
                                                        for k in item_indx) - final_penalty)
                 rhs = total_size_selected - utils.capacity
                 model.addConstr(lhs=sum(sizes) - utils.capacity, sense=GRB.GREATER_EQUAL, rhs=rhs,
