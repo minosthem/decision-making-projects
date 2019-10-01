@@ -1,4 +1,5 @@
 from itertools import product
+from os.path import join
 import gurobipy as gb
 import utils
 
@@ -38,7 +39,6 @@ def run_gurobi(problem_instances):
         print("Optimizing model {}".format(i))
         # optimize the model
         model.optimize()
-        model.write("model.ilp")
         check_model_status(model, i)
 
 
@@ -97,11 +97,15 @@ def check_model_status(model, problem_instance):
             print('%s %g' % (v.varName, v.x))
         obj = model.getObjective()
         print('Profit: %g' % -obj.getValue())
+        # mps extension for writing the model itself
+        model.write(join(utils.output_folder, "model.mps"))
+        # sol extension to write current solution
+        model.write(join(utils.output_folder, "model.sol"))
     elif status == gb.GRB.Status.INFEASIBLE:
         print('Optimization was stopped with status %d' % status)
         # do IIS
         model.computeIIS()
-        model.write("model_iis.ilp")
+        model.write(join(utils.output_folder, "model_iis.ilp"))
         for c in model.getConstrs():
             if c.IISConstr:
                 print('%s' % c.constrName)
@@ -112,5 +116,4 @@ def check_model_status(model, problem_instance):
     elif status == gb.GRB.Status.UNBOUNDED:
         model.setObjective(0, gb.GRB.MAXIMIZE)
         model.optimize()
-        model.write("model_unbounded.ilp")
         check_model_status(model, problem_instance)

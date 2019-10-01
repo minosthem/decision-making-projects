@@ -1,5 +1,6 @@
 from scipy import stats
-
+from os.path import join
+import os
 
 # global parameters
 GROUP = 10
@@ -11,6 +12,8 @@ penalty = 60 + (GROUP / 10)
 risk = {"EN": 0, "CVaR": 0.95}
 confidence_interval = 0.95
 accuracy = 2
+
+output_folder = join(os.getcwd(), "output")
 
 
 def profit(revenue, size_excluded):
