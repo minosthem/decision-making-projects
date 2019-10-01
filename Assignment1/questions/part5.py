@@ -28,6 +28,8 @@ def run_gurobi(problem_instances):
                     (scenario[k] * revenues[k] * decision_var[k]) * sizes[k] for k in item_indx))
                 rhs = total_size_selected - utils.capacity
                 # TODO unbounded model??
+                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx if decision_var[k] == 1),
+                                sense=gb.GRB.LESS_EQUAL, rhs=utils.capacity, name="noPenalty{}{}".format(j, z))
                 model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
                                 sense=gb.GRB.GREATER_EQUAL, rhs=rhs, name="scenario{}{}".format(j, z))
                 model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
@@ -38,6 +40,7 @@ def run_gurobi(problem_instances):
         print("Updating model {}".format(i))
         # update the model
         model.update()
+        model.feasRelaxS(relaxobjtype=0, minrelax=True, vrelax=False, crelax=True)
         print("Optimizing model {}".format(i))
         # optimize the model
         model.optimize()
@@ -100,14 +103,14 @@ def check_model_status(model, problem_instance):
         obj = model.getObjective()
         print('Profit: %g' % -obj.getValue())
         # mps extension for writing the model itself
-        model.write(join(utils.output_folder, "model.mps"))
+        model.write(join(utils.output_folder, "model{}.mps".format(problem_instance)))
         # sol extension to write current solution
-        model.write(join(utils.output_folder, "model.sol"))
+        model.write(join(utils.output_folder, "model{}.sol".format(problem_instance)))
     elif status == gb.GRB.Status.INFEASIBLE:
         print('Optimization was stopped with status %d' % status)
         # do IIS
         model.computeIIS()
-        model.write(join(utils.output_folder, "model_iis.ilp"))
+        model.write(join(utils.output_folder, "model_iis{}.ilp".format(problem_instance)))
         for c in model.getConstrs():
             if c.IISConstr:
                 print('%s' % c.constrName)
