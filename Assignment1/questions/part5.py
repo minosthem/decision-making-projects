@@ -38,13 +38,8 @@ def run_gurobi(problem_instances):
         print("Optimizing model {}".format(i))
         # optimize the model
         model.optimize()
-
-        # TODO check why x attribute cannot be accessed
-        print("Showing variables and objective function values for problem instance {}".format(i))
-        for v in model.getVars():
-            print('%s %g' % (v.varName, v.x))
-        obj = model.getObjective()
-        print('Profit: %g' % -obj.getValue())
+        model.write("model.ilp")
+        check_model_status(model, i)
 
 
 def get_model_data(items):
@@ -92,3 +87,30 @@ def total_selected_size(sizes, decision_vars):
         if decision_var == 1.0 or decision_var == 1:
             total_size += sizes[i]
     return total_size
+
+
+def check_model_status(model, problem_instance):
+    status = model.status
+    if status == gb.GRB.Status.OPTIMAL:
+        print("Showing variables and objective function values for problem instance {}".format(problem_instance))
+        for v in model.getVars():
+            print('%s %g' % (v.varName, v.x))
+        obj = model.getObjective()
+        print('Profit: %g' % -obj.getValue())
+    elif status == gb.GRB.Status.INFEASIBLE:
+        print('Optimization was stopped with status %d' % status)
+        # do IIS
+        model.computeIIS()
+        model.write("model_iis.ilp")
+        for c in model.getConstrs():
+            if c.IISConstr:
+                print('%s' % c.constrName)
+    elif status == gb.GRB.Status.INF_OR_UNBD:
+        model.setParam("DualReductions", 0)
+        model.optimize()
+        check_model_status(model, problem_instance)
+    elif status == gb.GRB.Status.UNBOUNDED:
+        model.setObjective(0, gb.GRB.MAXIMIZE)
+        model.optimize()
+        model.write("model_unbounded.ilp")
+        check_model_status(model, problem_instance)
