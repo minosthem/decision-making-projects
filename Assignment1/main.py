@@ -1,4 +1,4 @@
-from questions import part1, part2And3, part5
+from questions import part1, part2And3, part5, part7
 import yaml
 import os
 from os.path import exists, join
@@ -27,11 +27,13 @@ def main():
     properties, output_folder = load_properties()
     print("Starting executing assignment parts")
     # part 1
-    instances = part1.generate_problem_instances(properties)
+    instances = part1.generate_problem_instances(properties=properties)
     # part 2 & 3
-    part2And3.run_knapsack_for_problem_instance(instances[0], properties)
+    part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)
     # part 4 & 5
-    part5.run_gurobi(instances, properties, output_folder)
+    part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
+    # part 7 SAA
+    part7.run_sample_average_approximation(instance=instances[0], properties=properties)
 
 
 if __name__ == '__main__':
