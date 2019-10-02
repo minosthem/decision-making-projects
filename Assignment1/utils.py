@@ -1,22 +1,23 @@
 from scipy import stats
-from os.path import join
+from os.path import join, exists
 import os
+import yaml
 
-# global parameters
-GROUP = 10
-runs = 10
-item_num = 5
-
-capacity = 400 + (4 * GROUP)
-penalty = 60 + (GROUP / 10)
-risk = {"EN": 0, "CVaR": 0.95}
-confidence_interval = 0.95
-accuracy = 2
-
-output_folder = join(os.getcwd(), "output")
+properties_folder = join(os.getcwd(), "properties")
+example_properties_file = join(properties_folder, "example_properties.yaml")
+properties_file = join(properties_folder, "properties.yaml")
 
 
-def profit(revenue, size_excluded):
+def load_properties():
+    if exists(properties_file):
+        with open(properties_file, 'r') as f:
+            return yaml.safe_load(f)
+    else:
+        with open(example_properties_file, 'r') as f:
+            return yaml.safe_load(f)
+
+
+def profit(penalty, revenue, size_excluded):
     return revenue - (penalty * size_excluded)
 
 

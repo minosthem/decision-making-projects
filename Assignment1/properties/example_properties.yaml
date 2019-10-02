@@ -1,0 +1,15 @@
+# If you want to change these properties copy this file in the same folder
+# with the name properties file and update the below values
+group: 10
+problem_instances: 10
+item_nums_per_instance: 10
+risks:
+  en: 0
+  cvar: 0.95
+confidence_interval: 0.95
+accuracy: 2
+capacity: 440 # 400 + (4 * group)
+penalty: 61 # 60 + (GROUP / 10)
+output_folder_name: output
+run_full_runs_monte_carlo: True
+small_run_monte_carlo: 100

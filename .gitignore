@@ -1,7 +1,11 @@
+# python & PyCharm specific
 __pycache__
 .idea/
 *.iml
 *.log
-assignments/
 */.ipynb_checkpoints/
-output/
+
+# project specific
+assignments/
+Assignment1/output/
+Assignment1/properties/properties.yaml

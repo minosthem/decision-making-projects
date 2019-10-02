@@ -1,11 +1,10 @@
 import numpy as np
 
-import utils
 from models.Item import Item
 from models.ProblemInstance import ProblemInstance
 
 
-def generate_problem_instances():
+def generate_problem_instances(properties):
     """
     Method to generate the requested problem instances with 10 items each.
     For each item, dli, dhi, pi and ri are calculated and saved in the respective fields of the Item object.
@@ -17,17 +16,17 @@ def generate_problem_instances():
     """
     problem_instances = []
     print("Generating problem instances with items")
-    for i in range(utils.runs):
+    for i in range(properties["problem_instances"]):
         instance = ProblemInstance()
-        for j in range(utils.item_num):
+        for j in range(properties["item_nums_per_instance"]):
             item = Item(j)
             # calculate pi
             item.pi = 0.5 + (0.05 * j) - 0.001
             # calculate d_lj
-            gj = np.random.poisson(lam=(j / 2), size=utils.item_num)[j]
+            gj = np.random.poisson(lam=(j / 2), size=properties["item_nums_per_instance"])[j]
             item.dl = int(max(gj, 10))
             # calculate d_hj
-            item.dh = int(generate_triangular_random_numbers(j)[j])
+            item.dh = int(generate_triangular_random_numbers(properties, j)[j])
             # define item size based on dl, dh and their probabilities
             item.size = int((item.pi * item.dh) + ((1 - item.pi) * item.dl))
             # calculate r
@@ -37,18 +36,19 @@ def generate_problem_instances():
     return problem_instances
 
 
-def generate_triangular_random_numbers(j):
+def generate_triangular_random_numbers(properties, item_iteration):
     """
     Method that generates random numbers using triangular distribution.
     Left, mode and right parameters are calculated and provided in numpy.random.triangular
     to generate an array with the relevant random numbers
-    :param j: the iterator's index (position of the item)
+    :param item_iteration: the iterator's index (position of the item)
+    :param properties properties from yaml file
     :return: nd array with the random numbers
     """
-    left = 90 + utils.GROUP - j
-    mode = 100 + utils.GROUP - j
-    right = 110 + utils.GROUP - j
-    return np.random.triangular(left=left, mode=mode, right=right, size=utils.item_num)
+    left = 90 + properties["group"] - item_iteration
+    mode = 100 + properties["group"] - item_iteration
+    right = 110 + properties["group"] - item_iteration
+    return np.random.triangular(left=left, mode=mode, right=right, size=properties["item_nums_per_instance"])
 
 
 # TODO maybe delete the below completely

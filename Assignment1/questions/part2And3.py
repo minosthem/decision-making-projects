@@ -4,7 +4,7 @@ from models.MonteCarloSim import MonteCarloSim
 import utils
 
 
-def run_knapsack_for_problem_instance(instance, capacity):
+def run_knapsack_for_problem_instance(instance, properties):
     """
     Gets a specific problem instance and the default container capacity.
     Creates a list of tuples for each item of each problem instance, containing the value of the item,
@@ -13,16 +13,16 @@ def run_knapsack_for_problem_instance(instance, capacity):
     will be in the knapsack or not. Finally, the profit from the monte carlo simulation is
     calculated.
     :param instance: a specific problem instance
-    :param capacity: the container's capacity
+    :param properties: properties read from yaml file
     """
     print("Executing Knapsack problem")
     items = reform_items(instance.items)
-    best_value = knapsack_dp(items, capacity, return_all=True)
+    best_value = knapsack_dp(items, properties["capacity"], return_all=True)
     selected_items, total_revenue = get_knapsack_result(best_value, instance.items)
     print("Running monte carlo simulation for a small number of runs")
 
-    monte_carlo_runs = 100
-    profits = monte_carlo(monte_carlo_runs, selected_items, capacity)
+    monte_carlo_runs = properties["small_run_monte_carlo"]
+    profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
     m = np.mean(profits)
     print("Profit mean is {}".format(m))
 
@@ -32,16 +32,18 @@ def run_knapsack_for_problem_instance(instance, capacity):
     ci = (m - halfWidth, m + halfWidth)
     print("Confidence interval is {}".format(ci))
 
-    print("Running monte carlo simulation")
-    monte_carlo_runs = ((1.96 * Sn) / (10 ** -utils.accuracy)) ** 2
-    profits = monte_carlo(monte_carlo_runs, selected_items, capacity)
-    m = np.mean(profits)
-    print("Profit mean is {}".format(m))
+    if properties["run_full_runs_monte_carlo"]:
+        print("Running monte carlo simulation")
+        monte_carlo_runs = ((1.96 * Sn) / (10 ** -properties["accuracy"])) ** 2
+        profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
+        m = np.mean(profits)
+        print("Profit mean is {}".format(m))
 
-    # Construct a confidence interval
-    Sn = np.std(profits)
-    halfWidth = 1.96 * Sn / np.sqrt(int(monte_carlo_runs))
-    ci = (m - halfWidth, m + halfWidth)
+        # Construct a confidence interval
+        Sn = np.std(profits)
+        halfWidth = 1.96 * Sn / np.sqrt(int(monte_carlo_runs))
+        ci = (m - halfWidth, m + halfWidth)
+        print("Confidence interval is {}".format(ci))
 
 
 def reform_items(items):
@@ -99,7 +101,7 @@ def knapsack_dp(items, capacity, return_all=False):
     return picks
 
 
-def monte_carlo(runs, selected_items, capacity):
+def monte_carlo(runs, selected_items, capacity, penalty):
     # monte carlo
     monte_carlo_runs = []
     profits = []
@@ -123,7 +125,7 @@ def monte_carlo(runs, selected_items, capacity):
             else:
                 count_oversize += 1
                 total_size_excluded += item.size
-        profit = utils.profit(total_revenue, total_size_excluded)
+        profit = utils.profit(penalty, total_revenue, total_size_excluded)
         monte_carlo_sim.items = new_items
         monte_carlo_sim.profit = profit
         monte_carlo_runs.append(monte_carlo_sim)

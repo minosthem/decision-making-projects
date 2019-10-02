@@ -1,10 +1,13 @@
 from itertools import product
 from os.path import join
+
 import gurobipy as gb
-import utils
 
 
-def run_gurobi(problem_instances):
+def run_gurobi(problem_instances, properties, output_folder):
+    capacity = properties["capacity"]
+    penalty = properties["penalty"]
+
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
         item_indx = list(range(len(problem_instance.items)))
@@ -21,18 +24,18 @@ def run_gurobi(problem_instances):
                 # calculate the total selected size based on the decision variables
                 total_size_selected = total_selected_size(scenario, decision_var)
                 # calculate the penalty based on the capacity and selected weights
-                final_penalty = utils.penalty * (total_size_selected - utils.capacity)
+                final_penalty = penalty * (total_size_selected - capacity)
                 # calculate the objective function of the current scenario and decision var vector
                 obj += probabilities[j] * (sum((scenario[k] * revenues[k] * decision_var[k]) * sizes[k]
                                                for k in item_indx) - final_penalty if final_penalty > 0 else sum(
                     (scenario[k] * revenues[k] * decision_var[k]) * sizes[k] for k in item_indx))
-                rhs = total_size_selected - utils.capacity
+                rhs = total_size_selected - capacity
                 # TODO unbounded model??
                 model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx if decision_var[k] == 1),
-                                sense=gb.GRB.LESS_EQUAL, rhs=utils.capacity, name="noPenalty{}{}".format(j, z))
-                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
+                                sense=gb.GRB.LESS_EQUAL, rhs=capacity, name="noPenalty{}{}".format(j, z))
+                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - capacity,
                                 sense=gb.GRB.GREATER_EQUAL, rhs=rhs, name="scenario{}{}".format(j, z))
-                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - utils.capacity,
+                model.addConstr(lhs=gb.quicksum(sizes[k] for k in item_indx) - capacity,
                                 sense=gb.GRB.GREATER_EQUAL, rhs=0, name="scenarioPositive{}{}".format(j, z))
         # set the objective function to the model
         print("Setting total objective function to model {}".format(i))
@@ -44,7 +47,7 @@ def run_gurobi(problem_instances):
         print("Optimizing model {}".format(i))
         # optimize the model
         model.optimize()
-        check_model_status(model, i)
+        check_model_status(model, i, output_folder)
 
 
 def get_model_data(items):
@@ -94,7 +97,7 @@ def total_selected_size(sizes, decision_vars):
     return total_size
 
 
-def check_model_status(model, problem_instance):
+def check_model_status(model, problem_instance, output_folder):
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
         print("Showing variables and objective function values for problem instance {}".format(problem_instance))
@@ -103,22 +106,22 @@ def check_model_status(model, problem_instance):
         obj = model.getObjective()
         print('Profit: %g' % -obj.getValue())
         # mps extension for writing the model itself
-        model.write(join(utils.output_folder, "model{}.mps".format(problem_instance)))
+        model.write(join(output_folder, "model{}.mps".format(problem_instance)))
         # sol extension to write current solution
-        model.write(join(utils.output_folder, "model{}.sol".format(problem_instance)))
+        model.write(join(output_folder, "model{}.sol".format(problem_instance)))
     elif status == gb.GRB.Status.INFEASIBLE:
         print('Optimization was stopped with status %d' % status)
         # do IIS
         model.computeIIS()
-        model.write(join(utils.output_folder, "model_iis{}.ilp".format(problem_instance)))
+        model.write(join(output_folder, "model_iis{}.ilp".format(problem_instance)))
         for c in model.getConstrs():
             if c.IISConstr:
                 print('%s' % c.constrName)
     elif status == gb.GRB.Status.INF_OR_UNBD:
         model.setParam("DualReductions", 0)
         model.optimize()
-        check_model_status(model, problem_instance)
+        check_model_status(model, problem_instance, output_folder)
     elif status == gb.GRB.Status.UNBOUNDED:
         model.setObjective(0, gb.GRB.MAXIMIZE)
         model.optimize()
-        check_model_status(model, problem_instance)
+        check_model_status(model, problem_instance, output_folder)
