@@ -137,6 +137,11 @@ def monte_carlo(runs, selected_items, capacity, penalty):
 def get_knapsack_result(best_value, items):
     item_indices = best_value[0]
     total_revenue = best_value[1]
+    print("Knapsack result")
+    print("===============")
+    print("Selected items ", item_indices)
+    print("Total revenue: {}".format(total_revenue))
+    print("=========================================")
     for i, item in enumerate(items):
         if i in item_indices:
             item.decision_variable = 1
