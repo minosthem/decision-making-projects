@@ -11,19 +11,20 @@ properties_file = join(properties_folder, "properties.yaml")
 def load_properties():
     if exists(properties_file):
         with open(properties_file, 'r') as f:
-            return yaml.safe_load(f)
+            properties = yaml.safe_load(f)
     else:
         with open(example_properties_file, 'r') as f:
-            return yaml.safe_load(f)
-
-
-def main():
-    print("Loading properties file")
-    properties = load_properties()
+            properties = yaml.safe_load(f)
     output_folder_name = properties["output_folder_name"] if properties["output_folder_name"] else "output"
     output_folder = join(os.getcwd(), output_folder_name)
     if not exists(output_folder):
         os.mkdir(output_folder)
+    return properties, output_folder
+
+
+def main():
+    print("Loading properties file")
+    properties, output_folder = load_properties()
     print("Starting executing assignment parts")
     # part 1
     instances = part1.generate_problem_instances(properties)
