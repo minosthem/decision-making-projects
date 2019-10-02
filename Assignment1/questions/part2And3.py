@@ -1,7 +1,7 @@
 import numpy as np
 from models.Item import Item
 from models.MonteCarloSim import MonteCarloSim
-import utils
+from scipy import stats
 
 
 def run_knapsack_for_problem_instance(instance, properties):
@@ -27,22 +27,22 @@ def run_knapsack_for_problem_instance(instance, properties):
     print("Profit mean is {}".format(m))
 
     # Construct a confidence interval
-    Sn = np.std(profits)
-    halfWidth = 1.96 * Sn / np.sqrt(int(monte_carlo_runs))
-    ci = (m - halfWidth, m + halfWidth)
+    sn_small_run = np.std(profits)
+    half_width_small_run = 1.96 * sn_small_run / np.sqrt(int(monte_carlo_runs))
+    ci = (m - half_width_small_run, m + half_width_small_run)
     print("Confidence interval is {}".format(ci))
 
     if properties["run_full_runs_monte_carlo"]:
         print("Running monte carlo simulation")
-        monte_carlo_runs = ((1.96 * Sn) / (10 ** -properties["accuracy"])) ** 2
+        monte_carlo_runs = ((1.96 * sn_small_run) / (10 ** -properties["accuracy"])) ** 2
         profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
         m = np.mean(profits)
         print("Profit mean is {}".format(m))
 
         # Construct a confidence interval
-        Sn = np.std(profits)
-        halfWidth = 1.96 * Sn / np.sqrt(int(monte_carlo_runs))
-        ci = (m - halfWidth, m + halfWidth)
+        sn = np.std(profits)
+        half_width = 1.96 * sn / np.sqrt(int(monte_carlo_runs))
+        ci = (m - half_width, m + half_width)
         print("Confidence interval is {}".format(ci))
 
 
@@ -85,12 +85,12 @@ def knapsack_dp(items, capacity, return_all=False):
                 table[i, w] = table[i - 1, w]
 
     picks = []
-    K = capacity
+    remaining_capacity = capacity
 
     for i in range(n_items, 0, -1):
-        if keep[i, K] == 1:
+        if keep[i, remaining_capacity] == 1:
             picks.append(i)
-            K -= weights[i - 1]
+            remaining_capacity -= weights[i - 1]
 
     picks.sort()
     picks = [x - 1 for x in picks]  # change to 0-index
@@ -111,7 +111,7 @@ def monte_carlo(runs, selected_items, capacity, penalty):
         for j, old_item in enumerate(selected_items):
             item = Item(j)
             item.copy_item(old_item)
-            bernoulli_res = utils.bernoulli(item.pi, 1)
+            bernoulli_res = bernoulli(item.pi, 1)
             item.size = item.dh if bernoulli_res[0] == 1 else item.dl
             new_items.append(item)
         sum_sizes = 0
@@ -125,11 +125,11 @@ def monte_carlo(runs, selected_items, capacity, penalty):
             else:
                 count_oversize += 1
                 total_size_excluded += item.size
-        profit = utils.profit(penalty, total_revenue, total_size_excluded)
+        run_profit = calc_profit(penalty, total_revenue, total_size_excluded)
         monte_carlo_sim.items = new_items
-        monte_carlo_sim.profit = profit
+        monte_carlo_sim.profit = run_profit
         monte_carlo_runs.append(monte_carlo_sim)
-        profits.append(profit)
+        profits.append(run_profit)
     print_monte_carlo_result(monte_carlo_runs)
     return profits
 
@@ -171,6 +171,14 @@ def print_monte_carlo_result(monte_carlo_runs):
         printed += "\t\t"
         printed += str(monte_carlo_sim.profit)
         printed += "\n"
-        printed += "===================================================================================================\n"
+        printed += "================================================================" \
+                   "===================================\n"
         print(printed)
 
+
+def calc_profit(penalty, revenue, size_excluded):
+    return revenue - (penalty * size_excluded)
+
+
+def bernoulli(prob, item_size):
+    return stats.bernoulli(prob).rvs(item_size)

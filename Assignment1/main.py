@@ -1,15 +1,30 @@
 from questions import part1, part2And3, part5
-import utils
+import yaml
 import os
 from os.path import exists, join
 
+properties_folder = join(os.getcwd(), "properties")
+example_properties_file = join(properties_folder, "example_properties.yaml")
+properties_file = join(properties_folder, "properties.yaml")
+
+
+def load_properties():
+    if exists(properties_file):
+        with open(properties_file, 'r') as f:
+            return yaml.safe_load(f)
+    else:
+        with open(example_properties_file, 'r') as f:
+            return yaml.safe_load(f)
+
 
 def main():
-    properties = utils.load_properties()
+    print("Loading properties file")
+    properties = load_properties()
     output_folder_name = properties["output_folder_name"] if properties["output_folder_name"] else "output"
     output_folder = join(os.getcwd(), output_folder_name)
     if not exists(output_folder):
         os.mkdir(output_folder)
+    print("Starting executing assignment parts")
     # part 1
     instances = part1.generate_problem_instances(properties)
     # part 2 & 3
