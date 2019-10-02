@@ -4,7 +4,7 @@ group: 10
 problem_instances: 10
 item_nums_per_instance: 10
 risks:
-  en: 0
+  ev: 0
   cvar: 0.95
 confidence_interval: 0.95
 accuracy: 2
