@@ -5,7 +5,6 @@ class Item:
     the final selected size based on the pi field (i.e. the size field) and finally the r field
     """
     size = 0
-    selected_size = "dl"
     dl = 0
     dh = 0
     position = 0
@@ -20,7 +19,7 @@ class Item:
         :param position: the iterator's index
         """
         if position == -1:
-            raise Exception("Provide a valid i in")
+            raise Exception("Provide a valid item's position in the list")
         else:
             self.position = position
 
