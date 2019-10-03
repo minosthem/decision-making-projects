@@ -162,7 +162,7 @@ def optimal_model(model, problem_instance, output_folder):
     for v in model.getVars():
         print('%s %g' % (v.varName, v.x))
     obj = model.getObjective()
-    print('Profit: %g' % -obj.getValue())
+    print('Profit: %g' % obj.getValue())
     # mps extension for writing the model itself
     model.write(join(output_folder, "model{}.mps".format(problem_instance)))
     # sol extension to write current solution
