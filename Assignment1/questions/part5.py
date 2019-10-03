@@ -15,6 +15,8 @@ def run_gurobi(problem_instances, properties, output_folder):
     """
     capacity = properties["capacity"]
     penalty = properties["penalty"]
+    cvar_risk = properties["risks"]["cvar"]
+    ev_risk = properties["risks"]["ev"]
 
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
