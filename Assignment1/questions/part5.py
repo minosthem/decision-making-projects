@@ -5,6 +5,14 @@ import gurobipy as gb
 
 
 def run_gurobi(problem_instances, properties, output_folder):
+    """
+    Method used by main.py, generates models for each problem instance.
+    Uses properties dictionary to get the capacity and penalty params.
+    :param problem_instances: the generated problem instances
+    :param properties: dictionary with the properties from yaml file
+    :param output_folder: the folder to save the models
+    :return:
+    """
     capacity = properties["capacity"]
     penalty = properties["penalty"]
 
@@ -15,6 +23,16 @@ def run_gurobi(problem_instances, properties, output_folder):
 
 
 def create_model_for_problem_instance(problem_instance, i, capacity, penalty, output_folder):
+    """
+    Method executed for each problem instance. Generates the scenarios for size combinations (dl, dh)
+    for all the items. Creates a model for this instance and iterates the possible scenarios
+    :param problem_instance: the current problem instance
+    :param i: problem instance position in the list
+    :param capacity: property from yaml file
+    :param penalty: property from yaml file
+    :param output_folder: the folder to store the model
+    :return:
+    """
     item_indx = list(range(len(problem_instance.items)))
     scenarios, revenues, probabilities = get_model_data(problem_instance.items)
 
@@ -40,6 +58,21 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ou
 
 
 def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, probabilities, revenues):
+    """
+    Method executed for each scenario. Calculates for each item its revenue i.e. size[i] * revenue[i]
+    and stores them in a list. Updates the objective function with the current scenario and adds the
+    relevant constraint
+    :param model: the model of this problem instance
+    :param obj: the objective function to be updated
+    :param scenario: the current scenario, i.e. list of the sizes of the items
+    :param j: the scenario's position in the list
+    :param item_indx: the number of items
+    :param capacity: property in the yaml file
+    :param penalty: property in the yaml file
+    :param probabilities: the calculated probabilities of all the scenarios
+    :param revenues: the revenue of each item stored in a list
+    :return:
+    """
     total_revenues = get_total_revenues(scenario, revenues)
     # create model variables for scenario j
     decision_vars = model.addVars(item_indx, vtype=gb.GRB.BINARY, name="decision_var{}".format(j), lb=0)
@@ -78,6 +111,13 @@ def get_model_data(items):
 
 
 def get_total_revenues(sizes, revenues):
+    """
+    Creates a list where in each position stores the result of size*revenue
+    for each item
+    :param sizes: the list of sizes of all items
+    :param revenues: the list of the revenue of each item
+    :return: list of the total revenue per item
+    """
     total_revenues = []
     for i, size in enumerate(sizes):
         total_revenues.append(size * revenues[i])
@@ -85,6 +125,13 @@ def get_total_revenues(sizes, revenues):
 
 
 def check_model_status(model, problem_instance, output_folder):
+    """
+    Checks the result of the model
+    :param model: the generated model
+    :param problem_instance: the respective problem instance
+    :param output_folder: folder to store the model
+    :return:
+    """
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
         print("Showing variables and objective function values for problem instance {}".format(problem_instance))
