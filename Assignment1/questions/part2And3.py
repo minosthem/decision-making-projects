@@ -20,30 +20,11 @@ def run_knapsack_for_problem_instance(instance, properties):
     best_value = knapsack_dp(items, properties["capacity"], return_all=True)
     selected_items, total_revenue = get_knapsack_result(best_value, instance.items)
     print("Running monte carlo simulation for a small number of runs")
-
-    monte_carlo_runs = properties["small_run_monte_carlo"]
-    profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
-    m = np.mean(profits)
-    print("Profit mean is {}".format(m))
-
-    # Construct a confidence interval
-    sn_small_run = np.std(profits)
-    half_width_small_run = 1.96 * sn_small_run / np.sqrt(int(monte_carlo_runs))
-    ci = (m - half_width_small_run, m + half_width_small_run)
-    print("Confidence interval is {}".format(ci))
-
+    sn_small_run = run_small_monte_carlo(properties=properties, selected_items=selected_items)
     if properties["run_full_runs_monte_carlo"]:
-        print("Running monte carlo simulation")
-        monte_carlo_runs = ((1.96 * sn_small_run) / (10 ** -properties["accuracy"])) ** 2
-        profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
-        m = np.mean(profits)
-        print("Profit mean is {}".format(m))
+        run_full_monte_carlo(properties=properties, selected_items=selected_items, sn_small_run=sn_small_run)
 
-        # Construct a confidence interval
-        sn = np.std(profits)
-        half_width = 1.96 * sn / np.sqrt(int(monte_carlo_runs))
-        ci = (m - half_width, m + half_width)
-        print("Confidence interval is {}".format(ci))
+# ================================== Knapsack Algorithm ================================================= #
 
 
 def reform_items(items):
@@ -101,6 +82,68 @@ def knapsack_dp(items, capacity, return_all=False):
     return picks
 
 
+def get_knapsack_result(best_value, items):
+    item_indices = best_value[0]
+    total_revenue = best_value[1]
+    print("Knapsack result")
+    print("=========================================")
+    print("Selected items ", item_indices)
+    print("Total revenue: {}".format(total_revenue))
+    print("=========================================")
+    for i, item in enumerate(items):
+        if i in item_indices:
+            item.decision_variable = 1
+        else:
+            item.decision_variable = 0
+    selected_items = [x for x in items if x.decision_variable == 1]
+    return selected_items, total_revenue
+
+
+def check_inputs(values, weights, n_items, capacity):
+    # check variable type
+    assert (isinstance(values, list))
+    assert (isinstance(weights, list))
+    assert (isinstance(n_items, int))
+    assert (isinstance(capacity, int))
+    # check value type
+    assert (all(isinstance(val, int) or isinstance(val, float) for val in values))
+    assert (all(isinstance(val, int) for val in weights))
+    # check validity of value
+    assert (all(val >= 0 for val in weights))
+    assert (n_items > 0)
+    assert (capacity > 0)
+
+# =================================== Monte Carlo Simulation ================================================= #
+
+
+def run_small_monte_carlo(properties, selected_items):
+    monte_carlo_runs = properties["small_run_monte_carlo"]
+    profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
+    m = np.mean(profits)
+    print("Profit mean is {}".format(m))
+
+    # Construct a confidence interval
+    sn_small_run = np.std(profits)
+    half_width_small_run = 1.96 * sn_small_run / np.sqrt(int(monte_carlo_runs))
+    ci = (m - half_width_small_run, m + half_width_small_run)
+    print("Confidence interval is {}".format(ci))
+    return sn_small_run
+
+
+def run_full_monte_carlo(properties, selected_items, sn_small_run):
+    print("Running monte carlo simulation")
+    monte_carlo_runs = ((1.96 * sn_small_run) / (10 ** -properties["accuracy"])) ** 2
+    profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
+    m = np.mean(profits)
+    print("Profit mean is {}".format(m))
+
+    # Construct a confidence interval
+    sn = np.std(profits)
+    half_width = 1.96 * sn / np.sqrt(int(monte_carlo_runs))
+    ci = (m - half_width, m + half_width)
+    print("Confidence interval is {}".format(ci))
+
+
 def monte_carlo(runs, selected_items, capacity, penalty):
     # monte carlo
     monte_carlo_runs = []
@@ -132,38 +175,6 @@ def monte_carlo(runs, selected_items, capacity, penalty):
         profits.append(run_profit)
     print_monte_carlo_result(monte_carlo_runs)
     return profits
-
-
-def get_knapsack_result(best_value, items):
-    item_indices = best_value[0]
-    total_revenue = best_value[1]
-    print("Knapsack result")
-    print("=========================================")
-    print("Selected items ", item_indices)
-    print("Total revenue: {}".format(total_revenue))
-    print("=========================================")
-    for i, item in enumerate(items):
-        if i in item_indices:
-            item.decision_variable = 1
-        else:
-            item.decision_variable = 0
-    selected_items = [x for x in items if x.decision_variable == 1]
-    return selected_items, total_revenue
-
-
-def check_inputs(values, weights, n_items, capacity):
-    # check variable type
-    assert (isinstance(values, list))
-    assert (isinstance(weights, list))
-    assert (isinstance(n_items, int))
-    assert (isinstance(capacity, int))
-    # check value type
-    assert (all(isinstance(val, int) or isinstance(val, float) for val in values))
-    assert (all(isinstance(val, int) for val in weights))
-    # check validity of value
-    assert (all(val >= 0 for val in weights))
-    assert (n_items > 0)
-    assert (capacity > 0)
 
 
 def print_monte_carlo_result(monte_carlo_runs):
