@@ -34,6 +34,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     :param i: problem instance position in the list
     :param capacity: property from yaml file
     :param penalty: property from yaml file
+    :param risk: model risk
     :param output_folder: the folder to store the model
     :return:
     """
@@ -73,6 +74,7 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk
     :param item_indx: the number of items
     :param capacity: property in the yaml file
     :param penalty: property in the yaml file
+    :param risk: model risk
     :param probabilities: the calculated probabilities of all the scenarios
     :param revenues: the revenue of each item stored in a list
     :return:
