@@ -80,7 +80,7 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, prob
     decision_vars = model.addVars(item_indx, vtype=gb.GRB.BINARY, name="decision_var{}".format(j), lb=0)
     tu = model.addVar(vtype=gb.GRB.CONTINUOUS, name="penalty_decision{}".format(j), lb=0)
     # calculate the objective function of the current scenario and decision var vector
-    obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - tu)
+    obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
 
     # add constraints
     model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
