@@ -1,5 +1,5 @@
 # If you want to change these properties copy this file in the same folder
-# with the name properties file and update the below values
+# with the name properties.yaml and update the below values
 group: 10
 problem_instances: 10
 item_nums_per_instance: 10
