@@ -134,28 +134,72 @@ def check_model_status(model, problem_instance, output_folder):
     """
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
-        print("Showing variables and objective function values for problem instance {}".format(problem_instance))
-        for v in model.getVars():
-            print('%s %g' % (v.varName, v.x))
-        obj = model.getObjective()
-        print('Profit: %g' % -obj.getValue())
-        # mps extension for writing the model itself
-        model.write(join(output_folder, "model{}.mps".format(problem_instance)))
-        # sol extension to write current solution
-        model.write(join(output_folder, "model{}.sol".format(problem_instance)))
+        optimal_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
     elif status == gb.GRB.Status.INFEASIBLE:
-        print('Optimization was stopped with status %d' % status)
-        # do IIS
-        model.computeIIS()
-        model.write(join(output_folder, "model_iis{}.ilp".format(problem_instance)))
-        for c in model.getConstrs():
-            if c.IISConstr:
-                print('%s' % c.constrName)
+        infeasible_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
     elif status == gb.GRB.Status.INF_OR_UNBD:
-        model.setParam("DualReductions", 0)
-        model.optimize()
-        check_model_status(model, problem_instance, output_folder)
+        inf_or_unb_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
     elif status == gb.GRB.Status.UNBOUNDED:
-        model.setObjective(0, gb.GRB.MAXIMIZE)
-        model.optimize()
-        check_model_status(model, problem_instance, output_folder)
+        unbounded_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
+
+
+def optimal_model(model, problem_instance, output_folder):
+    """
+    Print results for optimal model - Solution found!
+    :param model: model for a specific problem instance
+    :param problem_instance: problem instance's position
+    :param output_folder: the folder to store the model
+    """
+    print("Showing variables and objective function values for problem instance {}".format(problem_instance))
+    for v in model.getVars():
+        print('%s %g' % (v.varName, v.x))
+    obj = model.getObjective()
+    print('Profit: %g' % -obj.getValue())
+    # mps extension for writing the model itself
+    model.write(join(output_folder, "model{}.mps".format(problem_instance)))
+    # sol extension to write current solution
+    model.write(join(output_folder, "model{}.sol".format(problem_instance)))
+
+
+def infeasible_model(model, problem_instance, output_folder):
+    """
+    Compute IIS if model is infeasible. Print the constraints and
+    store the model in a file
+    :param model: problem instance model
+    :param problem_instance: the position in the list of problem instances
+    :param output_folder: the folder to store the model
+    """
+    print('Optimization was stopped with status %d' % gb.GRB.Status.INFEASIBLE)
+    # do IIS
+    model.computeIIS()
+    model.write(join(output_folder, "model_iis{}.ilp".format(problem_instance)))
+    for c in model.getConstrs():
+        if c.IISConstr:
+            print('%s' % c.constrName)
+
+
+def inf_or_unb_model(model, problem_instance, output_folder):
+    """
+    Model is either infeasible or unbounded. Set DualReductions parameter
+    to zero in order to get a more precise response and re-optimize. Finally,
+    calls again the check_model_status function
+    :param model: problem instance model
+    :param problem_instance: the position of the problem instance
+    :param output_folder: the folder to store the model
+    """
+    model.setParam("DualReductions", 0)
+    model.optimize()
+    check_model_status(model, problem_instance, output_folder)
+
+
+def unbounded_model(model, problem_instance, output_folder):
+    """
+    Model is unbounded. Set objective function to zero and re-optimize.
+    Check the status of the model again to see if it is feasible
+    :param model: problem instance model
+    :param problem_instance: position of instance in the list
+    :param output_folder: folder to store the model
+    """
+    model.setObjective(0, gb.GRB.MAXIMIZE)
+    model.optimize()
+    check_model_status(model, problem_instance, output_folder)
