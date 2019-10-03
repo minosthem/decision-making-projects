@@ -111,7 +111,7 @@ def monte_carlo(runs, selected_items, capacity, penalty):
         for j, old_item in enumerate(selected_items):
             item = Item(j)
             item.copy_item(old_item)
-            bernoulli_res = bernoulli(item.pi, 1)
+            bernoulli_res = stats.bernoulli(item.pi).rvs(1)
             item.size = item.dh if bernoulli_res[0] == 1 else item.dl
             new_items.append(item)
         sum_sizes = 0
@@ -125,7 +125,7 @@ def monte_carlo(runs, selected_items, capacity, penalty):
             else:
                 count_oversize += 1
                 total_size_excluded += item.size
-        run_profit = calc_profit(penalty, total_revenue, total_size_excluded)
+        run_profit = total_revenue - (penalty * total_size_excluded)
         monte_carlo_sim.items = new_items
         monte_carlo_sim.profit = run_profit
         monte_carlo_runs.append(monte_carlo_sim)
@@ -138,7 +138,7 @@ def get_knapsack_result(best_value, items):
     item_indices = best_value[0]
     total_revenue = best_value[1]
     print("Knapsack result")
-    print("===============")
+    print("=========================================")
     print("Selected items ", item_indices)
     print("Total revenue: {}".format(total_revenue))
     print("=========================================")
@@ -179,11 +179,3 @@ def print_monte_carlo_result(monte_carlo_runs):
         printed += "================================================================" \
                    "===================================\n"
         print(printed)
-
-
-def calc_profit(penalty, revenue, size_excluded):
-    return revenue - (penalty * size_excluded)
-
-
-def bernoulli(prob, item_size):
-    return stats.bernoulli(prob).rvs(item_size)
