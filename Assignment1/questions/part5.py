@@ -21,10 +21,12 @@ def run_gurobi(problem_instances, properties, output_folder):
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
         create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
-                                          output_folder=output_folder)
+                                          risk=ev_risk, output_folder=output_folder)
+        create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
+                                          risk=cvar_risk, output_folder=output_folder)
 
 
-def create_model_for_problem_instance(problem_instance, i, capacity, penalty, output_folder):
+def create_model_for_problem_instance(problem_instance, i, capacity, penalty, risk, output_folder):
     """
     Method executed for each problem instance. Generates the scenarios for size combinations (dl, dh)
     for all the items. Creates a model for this instance and iterates the possible scenarios
@@ -45,7 +47,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ou
     print("Executing scenarios")
     for j, scenario in enumerate(scenarios):
         execute_scenario(model=model, obj=obj, scenario=scenario, j=j, item_indx=item_indx, capacity=capacity,
-                         penalty=penalty, probabilities=probabilities, revenues=revenues)
+                         penalty=penalty, risk=risk, probabilities=probabilities, revenues=revenues)
     # set the objective function to the model
     print("Setting total objective function to model {}".format(i))
     model.setObjective(obj, gb.GRB.MAXIMIZE)
@@ -59,7 +61,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ou
     check_model_status(model, i, output_folder)
 
 
-def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, probabilities, revenues):
+def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk, probabilities, revenues):
     """
     Method executed for each scenario. Calculates for each item its revenue i.e. size[i] * revenue[i]
     and stores them in a list. Updates the objective function with the current scenario and adds the
@@ -80,12 +82,15 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, prob
     decision_vars = model.addVars(item_indx, vtype=gb.GRB.BINARY, name="decision_var{}".format(j), lb=0)
     tu = model.addVar(vtype=gb.GRB.CONTINUOUS, name="penalty_decision{}".format(j), lb=0)
     # calculate the objective function of the current scenario and decision var vector
-    obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
-
-    # add constraints
-    model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
-                    name="items_capacity{}".format(j))
-    model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
+    if risk == 0:
+        obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
+        # add constraints
+        model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
+                        name="items_capacity{}".format(j))
+        model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
+    else:
+        # TODO CVaR
+        pass
 
 
 def get_model_data(items):
