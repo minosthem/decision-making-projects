@@ -9,20 +9,35 @@ properties_file = join(properties_folder, "properties.yaml")
 
 
 def load_properties():
-    if exists(properties_file):
-        with open(properties_file, 'r') as f:
-            properties = yaml.safe_load(f)
-    else:
-        with open(example_properties_file, 'r') as f:
-            properties = yaml.safe_load(f)
+    """
+    Load yaml file containint program's properties
+    :return: the properties dictionary and the output folder path
+    """
+    file = properties_file if exists(properties_file) else example_properties_file
+    with open(file, 'r') as f:
+        properties = yaml.safe_load(f)
+    return properties, create_output_folder(properties)
+
+
+def create_output_folder(properties):
+    """
+    Based on the provided output folder name, create the directory
+    if it does not exist and return the full path
+    :param properties: the dictionary with the input properties
+    :return: the output folder path
+    """
     output_folder_name = properties["output_folder_name"] if properties["output_folder_name"] else "output"
     output_folder = join(os.getcwd(), output_folder_name)
     if not exists(output_folder):
         os.mkdir(output_folder)
-    return properties, output_folder
+    return output_folder
 
 
 def main():
+    """
+    The main function used to call all necessary functions
+    from questions package
+    """
     print("Loading properties file")
     properties, output_folder = load_properties()
     print("Starting executing assignment parts")
