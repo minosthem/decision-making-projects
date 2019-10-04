@@ -61,7 +61,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     # optimize the model
     model.optimize()
     print("Getting model results")
-    check_model_status(model, i, output_folder)
+    check_model_status(model, i, risk, output_folder)
 
 
 def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk, probabilities, revenues):
@@ -94,7 +94,11 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk
         model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
     else:
         # TODO CVaR
-        pass
+        obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
+        # add constraints
+        model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
+                        name="items_capacity{}".format(j))
+        model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
 
 
 def get_model_data(items):
@@ -136,82 +140,89 @@ def get_total_revenues(sizes, revenues):
     return total_revenues
 
 
-def check_model_status(model, problem_instance, output_folder):
+def check_model_status(model, problem_instance, risk, output_folder):
     """
     Checks the result of the model
     :param model: the generated model
     :param problem_instance: the respective problem instance
+    :param risk: the model's risk
     :param output_folder: folder to store the model
     :return:
     """
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
-        optimal_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
+        optimal_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
     elif status == gb.GRB.Status.INFEASIBLE:
-        infeasible_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
+        infeasible_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
     elif status == gb.GRB.Status.INF_OR_UNBD:
-        inf_or_unb_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
+        inf_or_unb_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
     elif status == gb.GRB.Status.UNBOUNDED:
-        unbounded_model(model=model, problem_instance=problem_instance, output_folder=output_folder)
+        unbounded_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
 
 
-def optimal_model(model, problem_instance, output_folder):
+def optimal_model(model, problem_instance, risk, output_folder):
     """
     Print results for optimal model - Solution found!
     :param model: model for a specific problem instance
     :param problem_instance: problem instance's position
+    :param risk: the model's risk
     :param output_folder: the folder to store the model
     """
+    model_type = "EV" if risk == 0 else "CVaR"
     print("Showing variables and objective function values for problem instance {}".format(problem_instance))
     for v in model.getVars():
         print('%s %g' % (v.varName, v.x))
     obj = model.getObjective()
     print('Profit: %g' % obj.getValue())
     # mps extension for writing the model itself
-    model.write(join(output_folder, "model{}.mps".format(problem_instance)))
+    model.write(join(output_folder, "model{}{}.mps".format(model_type, problem_instance)))
     # sol extension to write current solution
-    model.write(join(output_folder, "model{}.sol".format(problem_instance)))
+    model.write(join(output_folder, "model{}{}.sol".format(model_type, problem_instance)))
 
 
-def infeasible_model(model, problem_instance, output_folder):
+def infeasible_model(model, problem_instance, risk, output_folder):
     """
     Compute IIS if model is infeasible. Print the constraints and
     store the model in a file
     :param model: problem instance model
     :param problem_instance: the position in the list of problem instances
+    :param risk: the model's risk
     :param output_folder: the folder to store the model
     """
+    model_type = "EV" if risk == 0 else "CVaR"
     print('Optimization was stopped with status %d' % gb.GRB.Status.INFEASIBLE)
     # do IIS
     model.computeIIS()
-    model.write(join(output_folder, "model_iis{}.ilp".format(problem_instance)))
+    model.write(join(output_folder, "model_iis{}{}.ilp".format(model_type, problem_instance)))
     for c in model.getConstrs():
         if c.IISConstr:
             print('%s' % c.constrName)
 
 
-def inf_or_unb_model(model, problem_instance, output_folder):
+def inf_or_unb_model(model, problem_instance, risk, output_folder):
     """
     Model is either infeasible or unbounded. Set DualReductions parameter
     to zero in order to get a more precise response and re-optimize. Finally,
     calls again the check_model_status function
     :param model: problem instance model
     :param problem_instance: the position of the problem instance
+    :param risk: the model's risk
     :param output_folder: the folder to store the model
     """
     model.setParam("DualReductions", 0)
     model.optimize()
-    check_model_status(model, problem_instance, output_folder)
+    check_model_status(model, problem_instance, risk, output_folder)
 
 
-def unbounded_model(model, problem_instance, output_folder):
+def unbounded_model(model, problem_instance, risk, output_folder):
     """
     Model is unbounded. Set objective function to zero and re-optimize.
     Check the status of the model again to see if it is feasible
     :param model: problem instance model
     :param problem_instance: position of instance in the list
+    :param risk: the model's risk
     :param output_folder: folder to store the model
     """
     model.setObjective(0, gb.GRB.MAXIMIZE)
     model.optimize()
-    check_model_status(model, problem_instance, output_folder)
+    check_model_status(model, problem_instance, risk, output_folder)
