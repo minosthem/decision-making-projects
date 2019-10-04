@@ -20,8 +20,10 @@ def run_gurobi(problem_instances, properties, output_folder):
 
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
+        print("Executing EV model for instance{}".format(i))
         create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
                                           risk=ev_risk, output_folder=output_folder)
+        print("Executing CVaR model for instance{}".format(i))
         create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
                                           risk=cvar_risk, output_folder=output_folder)
 
