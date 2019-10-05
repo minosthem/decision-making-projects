@@ -7,7 +7,7 @@ def run_sample_average_approximation(instance, properties, output_folder):
     data_runs = []
     for run in range(saa_runs):
         run_dict = {}
-        print("Running sample average approximation")
+        print("Running sample average approximation. Run {}".format(run))
         print("====================================")
         items = instance.items
         item_indx = list(range(len(items)))
