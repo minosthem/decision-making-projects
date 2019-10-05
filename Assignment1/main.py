@@ -2,6 +2,7 @@ from questions import part1, part2And3, part5, part7
 import yaml
 import os
 from os.path import exists, join
+import sys
 
 properties_folder = join(os.getcwd(), "properties")
 example_properties_file = join(properties_folder, "example_properties.yaml")
@@ -40,6 +41,9 @@ def main():
     """
     print("Loading properties file")
     properties, output_folder = load_properties()
+    orig_stdout = sys.stdout
+    f = open(join(output_folder, "logs.txt"), 'w')
+    sys.stdout = f
     print("Starting executing assignment parts")
     # part 1
     instances = part1.generate_problem_instances(properties=properties)
@@ -49,6 +53,8 @@ def main():
     part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
     # part 7 SAA
     part7.run_sample_average_approximation(instance=instances[0], properties=properties)
+    sys.stdout = orig_stdout
+    f.close()
 
 
 if __name__ == '__main__':

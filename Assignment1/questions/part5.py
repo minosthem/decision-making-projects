@@ -15,7 +15,7 @@ def run_gurobi(problem_instances, properties, output_folder):
     """
     capacity = properties["capacity"]
     penalty = properties["penalty"]
-    cvar_risk = properties["risks"]["cvar"]
+    cvar_risks = properties["risks"]["cvar"]
     ev_risk = properties["risks"]["ev"]
     beta = properties["beta"]
 
@@ -24,9 +24,11 @@ def run_gurobi(problem_instances, properties, output_folder):
         print("Executing EV model for instance{}".format(i))
         create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
                                           risk=ev_risk, output_folder=output_folder)
-        print("Executing CVaR model for instance{}".format(i))
-        create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
-                                          risk=cvar_risk, output_folder=output_folder, beta=beta)
+        for c, cvar_risk in enumerate(cvar_risks):
+            print("Executing CVaR model for instance{} and CVaR risk {}".format(i, cvar_risk))
+            create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity,
+                                              penalty=penalty,
+                                              risk=cvar_risk, output_folder=output_folder, beta=beta)
 
 
 def create_model_for_problem_instance(problem_instance, i, capacity, penalty, risk, output_folder, beta=None):
