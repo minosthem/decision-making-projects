@@ -17,6 +17,7 @@ def run_gurobi(problem_instances, properties, output_folder):
     penalty = properties["penalty"]
     cvar_risk = properties["risks"]["cvar"]
     ev_risk = properties["risks"]["ev"]
+    beta = properties["beta"]
 
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
@@ -25,10 +26,10 @@ def run_gurobi(problem_instances, properties, output_folder):
                                           risk=ev_risk, output_folder=output_folder)
         print("Executing CVaR model for instance{}".format(i))
         create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
-                                          risk=cvar_risk, output_folder=output_folder)
+                                          risk=cvar_risk, output_folder=output_folder, beta=beta)
 
 
-def create_model_for_problem_instance(problem_instance, i, capacity, penalty, risk, output_folder):
+def create_model_for_problem_instance(problem_instance, i, capacity, penalty, risk, output_folder, beta=None):
     """
     Method executed for each problem instance. Generates the scenarios for size combinations (dl, dh)
     for all the items. Creates a model for this instance and iterates the possible scenarios
@@ -38,6 +39,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     :param penalty: property from yaml file
     :param risk: model risk
     :param output_folder: the folder to store the model
+    :param beta: beta param
     :return:
     """
     item_indx = list(range(len(problem_instance.items)))
@@ -48,9 +50,10 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     obj = gb.LinExpr()
 
     print("Executing scenarios")
+    h = model.addVar(vtype=gb.GRB.CONTINUOUS, name="eta", lb=0)
     for j, scenario in enumerate(scenarios):
-        execute_scenario(model=model, obj=obj, scenario=scenario, j=j, item_indx=item_indx, capacity=capacity,
-                         penalty=penalty, risk=risk, probabilities=probabilities, revenues=revenues)
+        execute_scenario(model=model, obj=obj, scenario=scenario, j=j, h=h, item_indx=item_indx, capacity=capacity,
+                         penalty=penalty, risk=risk, beta=beta, probabilities=probabilities, revenues=revenues)
     # set the objective function to the model
     print("Setting total objective function to model {}".format(i))
     model.setObjective(obj, gb.GRB.MAXIMIZE)
@@ -64,7 +67,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     check_model_status(model, i, risk, output_folder)
 
 
-def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk, probabilities, revenues):
+def execute_scenario(model, obj, scenario, j, h, item_indx, capacity, penalty, risk, beta, probabilities, revenues):
     """
     Method executed for each scenario. Calculates for each item its revenue i.e. size[i] * revenue[i]
     and stores them in a list. Updates the objective function with the current scenario and adds the
@@ -73,10 +76,12 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk
     :param obj: the objective function to be updated
     :param scenario: the current scenario, i.e. list of the sizes of the items
     :param j: the scenario's position in the list
+    :param h: eta variable
     :param item_indx: the number of items
     :param capacity: property in the yaml file
     :param penalty: property in the yaml file
     :param risk: model risk
+    :param beta: beta parm
     :param probabilities: the calculated probabilities of all the scenarios
     :param revenues: the revenue of each item stored in a list
     :return:
@@ -85,20 +90,26 @@ def execute_scenario(model, obj, scenario, j, item_indx, capacity, penalty, risk
     # create model variables for scenario j
     decision_vars = model.addVars(item_indx, vtype=gb.GRB.BINARY, name="decision_var{}".format(j), lb=0)
     tu = model.addVar(vtype=gb.GRB.CONTINUOUS, name="penalty_decision{}".format(j), lb=0)
-    # calculate the objective function of the current scenario and decision var vector
     if risk == 0:
+        # calculate the objective function of the current scenario and decision var vector
         obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
         # add constraints
         model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
                         name="items_capacity{}".format(j))
         model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
     else:
-        # TODO CVaR
-        obj += probabilities[j] * (sum(total_revenues[k] * decision_vars[k] for k in item_indx) - (tu * penalty))
+
+        sw = model.addVar(vtype=gb.GRB.CONTINUOUS, name="sw{}".format(j), lb=0)
+        obj += (1 - beta) * (probabilities[j] * (sum(total_revenues[k] * decision_vars[k]
+                                                     for k in item_indx) - (tu * penalty))) + beta * (
+                       h - (1 / (1 - risk) * sum(probability * sw for probability in probabilities)))
         # add constraints
         model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
                         name="items_capacity{}".format(j))
         model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
+        model.addConstr(lhs=sw, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="sw_positive{}".format(j))
+        model.addConstr((sw >= h - sum(total_revenues[k] * decision_vars[k] - (tu * penalty) for k in item_indx)),
+                        name="eta_constr{}".format(j))
 
 
 def get_model_data(items):
