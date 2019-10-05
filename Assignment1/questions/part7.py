@@ -30,7 +30,7 @@ def run_sample_average_approximation(instance, properties, output_folder):
         ev_model = part5.create_model_for_problem_instance(total_items, revenues, probabilities, item_indx, i=0,
                                                            capacity=capacity,
                                                            penalty=penalty, risk=ev_risk, output_folder=output_folder)
-        ev_profits = calc_ev_profits(model, probabilities, total_items, revenues, item_indx, penalty)
+        ev_profits = calc_ev_profits(ev_model, probabilities, total_items, revenues, item_indx, penalty)
         cvar_models = []
         all_cvar_profits = []
         for c, cvar_risk in enumerate(cvar_risks):
