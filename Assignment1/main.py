@@ -52,7 +52,7 @@ def main():
     # part 4 & 5
     part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
     # part 7 SAA
-    part7.run_sample_average_approximation(instance=instances[0], properties=properties)
+    part7.run_sample_average_approximation(instance=instances[0], properties=properties, output_folder=output_folder)
     sys.stdout = orig_stdout
     f.close()
 

@@ -49,15 +49,3 @@ def generate_triangular_random_numbers(properties, item_iteration):
     mode = 100 + properties["group"] - item_iteration
     right = 110 + properties["group"] - item_iteration
     return np.random.triangular(left=left, mode=mode, right=right, size=properties["item_nums_per_instance"])
-
-
-# TODO maybe delete the below completely
-def generate_dl_dh_table(problem_instances):
-    weight_tuples = []
-    print("Create list with (dl, dh) tuples of each item of each problem instance")
-    for i, problem_instance in enumerate(problem_instances):
-        problem_weights = []
-        for j, item in enumerate(problem_instance.items):
-            problem_weights.append((item.dl, item.dh))
-        weight_tuples.append(problem_weights)
-    return weight_tuples

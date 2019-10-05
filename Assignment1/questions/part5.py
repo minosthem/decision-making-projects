@@ -21,21 +21,27 @@ def run_gurobi(problem_instances, properties, output_folder):
 
     print("Running gurobi for each problem instance")
     for i, problem_instance in enumerate(problem_instances):
+        item_indx = list(range(len(problem_instance.items)))
+        scenarios, revenues, probabilities = get_model_data(problem_instance.items)
         print("Executing EV model for instance{}".format(i))
-        create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity, penalty=penalty,
-                                          risk=ev_risk, output_folder=output_folder)
+        create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
+                                          penalty=penalty, risk=ev_risk, output_folder=output_folder)
         for c, cvar_risk in enumerate(cvar_risks):
             print("Executing CVaR model for instance{} and CVaR risk {}".format(i, cvar_risk))
-            create_model_for_problem_instance(problem_instance=problem_instance, i=i, capacity=capacity,
+            create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
                                               penalty=penalty,
                                               risk=cvar_risk, output_folder=output_folder, beta=beta)
 
 
-def create_model_for_problem_instance(problem_instance, i, capacity, penalty, risk, output_folder, beta=None):
+def create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i, capacity, penalty, risk,
+                                      output_folder, beta=None):
     """
     Method executed for each problem instance. Generates the scenarios for size combinations (dl, dh)
     for all the items. Creates a model for this instance and iterates the possible scenarios
-    :param problem_instance: the current problem instance
+    :param scenarios: item scenarios
+    :param revenues: list with the revenues of the items
+    :param probabilities: scenarios' probabilities
+    :param item_indx: list enumerating the number of items
     :param i: problem instance position in the list
     :param capacity: property from yaml file
     :param penalty: property from yaml file
@@ -44,9 +50,6 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     :param beta: beta param
     :return:
     """
-    item_indx = list(range(len(problem_instance.items)))
-    scenarios, revenues, probabilities = get_model_data(problem_instance.items)
-
     print("Creating model for problem instance {}".format(i))
     model = gb.Model('MILP')
     obj = gb.LinExpr()
@@ -68,6 +71,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     model.optimize()
     print("Getting model results")
     check_model_status(model, i, risk, probabilities, output_folder)
+    return model
 
 
 def execute_scenario(model, obj, scenario, j, h, item_indx, capacity, penalty, risk, beta, probabilities, revenues):
