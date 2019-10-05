@@ -4,7 +4,9 @@ from scipy import stats
 
 def run_sample_average_approximation(instance, properties, output_folder):
     saa_runs = properties["saa_runs"]
+    data_runs = []
     for run in range(saa_runs):
+        run_dict = {}
         print("Running sample average approximation")
         print("====================================")
         items = instance.items
@@ -31,8 +33,12 @@ def run_sample_average_approximation(instance, properties, output_folder):
                                                            capacity=capacity,
                                                            penalty=penalty, risk=ev_risk, output_folder=output_folder)
         ev_profits = calc_ev_profits(ev_model, probabilities, total_items, revenues, item_indx, penalty)
+        run_dict["ev_model"] = ev_model
+        run_dict["ev_profits"] = ev_profits
+        run_dict["ev_total_profit"] = ev_model.getObjective().getValue()
         cvar_models = []
         all_cvar_profits = []
+        cvar_total_profits = []
         for c, cvar_risk in enumerate(cvar_risks):
             print("Executing CVaR model for instance{} and CVaR risk {}".format(0, cvar_risk))
             model = part5.create_model_for_problem_instance(total_items, revenues, probabilities, item_indx, i=0,
@@ -43,6 +49,11 @@ def run_sample_average_approximation(instance, properties, output_folder):
             cvar_profits = calc_cvar_profits(model, probabilities, total_items, revenues, item_indx, penalty, beta,
                                              cvar_risk)
             all_cvar_profits.append(cvar_profits)
+            cvar_total_profits.append(model.getObjective().getValue())
+        run_dict["cvar_models"] = cvar_models
+        run_dict["all_cvar_profits"] = all_cvar_profits
+        run_dict["cvar_total_profits"] = cvar_total_profits
+        data_runs.append(run_dict)
 
 
 def calc_ev_profits(model, probabilities, total_items, revenues, item_indx, penalty):
