@@ -54,8 +54,9 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     print("Executing scenarios")
     h = model.addVar(vtype=gb.GRB.CONTINUOUS, name="eta", lb=0)
     for j, scenario in enumerate(scenarios):
-        execute_scenario(model=model, obj=obj, scenario=scenario, j=j, h=h, item_indx=item_indx, capacity=capacity,
-                         penalty=penalty, risk=risk, beta=beta, probabilities=probabilities, revenues=revenues)
+        execute_scenario(model=model, obj=obj, scenario=scenario, j=j, h=h, item_indx=item_indx,
+                         capacity=capacity, penalty=penalty, risk=risk, beta=beta, probabilities=probabilities,
+                         revenues=revenues)
     # set the objective function to the model
     print("Setting total objective function to model {}".format(i))
     model.setObjective(obj, gb.GRB.MAXIMIZE)
@@ -66,7 +67,7 @@ def create_model_for_problem_instance(problem_instance, i, capacity, penalty, ri
     # optimize the model
     model.optimize()
     print("Getting model results")
-    check_model_status(model, i, risk, output_folder)
+    check_model_status(model, i, risk, probabilities, output_folder)
 
 
 def execute_scenario(model, obj, scenario, j, h, item_indx, capacity, penalty, risk, beta, probabilities, revenues):
@@ -153,32 +154,37 @@ def get_total_revenues(sizes, revenues):
     return total_revenues
 
 
-def check_model_status(model, problem_instance, risk, output_folder):
+def check_model_status(model, problem_instance, risk, probabilities, output_folder):
     """
     Checks the result of the model
     :param model: the generated model
     :param problem_instance: the respective problem instance
     :param risk: the model's risk
+    :param probabilities: scenarios' probabilities
     :param output_folder: folder to store the model
     :return:
     """
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
-        optimal_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
+        optimal_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
+                      output_folder=output_folder)
     elif status == gb.GRB.Status.INFEASIBLE:
         infeasible_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
     elif status == gb.GRB.Status.INF_OR_UNBD:
-        inf_or_unb_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
+        inf_or_unb_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
+                         output_folder=output_folder)
     elif status == gb.GRB.Status.UNBOUNDED:
-        unbounded_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
+        unbounded_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
+                        output_folder=output_folder)
 
 
-def optimal_model(model, problem_instance, risk, output_folder):
+def optimal_model(model, problem_instance, risk, probabilities, output_folder):
     """
-    Print results for optimal model - Solution found!
+     Print results for optimal model - Solution found!
     :param model: model for a specific problem instance
     :param problem_instance: problem instance's position
     :param risk: the model's risk
+    :param probabilities: scenarios' probabilities
     :param output_folder: the folder to store the model
     """
     model_type = "EV" if risk == 0 else "CVaR"
@@ -191,6 +197,16 @@ def optimal_model(model, problem_instance, risk, output_folder):
     model.write(join(output_folder, "model{}{}.mps".format(model_type, problem_instance)))
     # sol extension to write current solution
     model.write(join(output_folder, "model{}{}.sol".format(model_type, problem_instance)))
+    if model_type == "CVaR":
+        sum_sw_p = 0
+        for p, probability in enumerate(probabilities):
+            for v in model.getVars():
+                if "sw{}".format(p) in v.varName:
+                    sum_sw_p += probability * v.x
+        for v in model.getVars():
+            if "eta" in v.varName:
+                exp_sw = v.x - ((1 / (1 - risk)) * sum_sw_p)
+                print("Expected sw is {}".format(exp_sw))
 
 
 def infeasible_model(model, problem_instance, risk, output_folder):
@@ -212,7 +228,7 @@ def infeasible_model(model, problem_instance, risk, output_folder):
             print('%s' % c.constrName)
 
 
-def inf_or_unb_model(model, problem_instance, risk, output_folder):
+def inf_or_unb_model(model, problem_instance, risk, probabilities, output_folder):
     """
     Model is either infeasible or unbounded. Set DualReductions parameter
     to zero in order to get a more precise response and re-optimize. Finally,
@@ -220,22 +236,24 @@ def inf_or_unb_model(model, problem_instance, risk, output_folder):
     :param model: problem instance model
     :param problem_instance: the position of the problem instance
     :param risk: the model's risk
+    :param probabilities: scenarios' probabilities
     :param output_folder: the folder to store the model
     """
     model.setParam("DualReductions", 0)
     model.optimize()
-    check_model_status(model, problem_instance, risk, output_folder)
+    check_model_status(model, problem_instance, risk, probabilities, output_folder)
 
 
-def unbounded_model(model, problem_instance, risk, output_folder):
+def unbounded_model(model, problem_instance, risk, probabilities, output_folder):
     """
     Model is unbounded. Set objective function to zero and re-optimize.
     Check the status of the model again to see if it is feasible
     :param model: problem instance model
     :param problem_instance: position of instance in the list
     :param risk: the model's risk
+    :param probabilities: scenarios' probabilities
     :param output_folder: folder to store the model
     """
     model.setObjective(0, gb.GRB.MAXIMIZE)
     model.optimize()
-    check_model_status(model, problem_instance, risk, output_folder)
+    check_model_status(model, problem_instance, risk, probabilities, output_folder)
