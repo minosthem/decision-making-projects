@@ -55,11 +55,18 @@ def create_model_for_problem_instance(scenarios, revenues, probabilities, item_i
     obj = gb.LinExpr()
 
     print("Executing scenarios")
-    h = model.addVar(vtype=gb.GRB.CONTINUOUS, name="eta", lb=0)
+    h = None
+    sws_vars = []
+    if risk != 0:
+        h = model.addVar(vtype=gb.GRB.CONTINUOUS, name="eta", lb=0)
     for j, scenario in enumerate(scenarios):
-        execute_scenario(model=model, obj=obj, scenario=scenario, j=j, h=h, item_indx=item_indx,
-                         capacity=capacity, penalty=penalty, risk=risk, beta=beta, probabilities=probabilities,
-                         revenues=revenues)
+        sw = execute_scenario(model=model, obj=obj, scenario=scenario, j=j, h=h, item_indx=item_indx,
+                              capacity=capacity, penalty=penalty, risk=risk, beta=beta, probabilities=probabilities,
+                              revenues=revenues)
+        sws_vars.append(sw)
+    if risk != 0:
+        obj += beta * (
+                h - ((1 / (1 - risk)) * sum(probabilities[j] * sws_vars[j] for j in range(len(probabilities)))))
     # set the objective function to the model
     print("Setting total objective function to model {}".format(i))
     model.setObjective(obj, gb.GRB.MAXIMIZE)
@@ -104,12 +111,12 @@ def execute_scenario(model, obj, scenario, j, h, item_indx, capacity, penalty, r
         model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
                         name="items_capacity{}".format(j))
         model.addConstr(lhs=tu, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="tu_positive{}".format(j))
+        return None
     else:
 
         sw = model.addVar(vtype=gb.GRB.CONTINUOUS, name="sw{}".format(j), lb=0)
         obj += (1 - beta) * (probabilities[j] * (sum(total_revenues[k] * decision_vars[k]
-                                                     for k in item_indx) - (tu * penalty))) + beta * (
-                       h - (1 / (1 - risk) * sum(probability * sw for probability in probabilities)))
+                                                     for k in item_indx) - (tu * penalty)))
         # add constraints
         model.addConstr((tu >= sum(scenario[k] * decision_vars[k] for k in item_indx) - capacity),
                         name="items_capacity{}".format(j))
@@ -117,6 +124,7 @@ def execute_scenario(model, obj, scenario, j, h, item_indx, capacity, penalty, r
         model.addConstr(lhs=sw, sense=gb.GRB.GREATER_EQUAL, rhs=0, name="sw_positive{}".format(j))
         model.addConstr((sw >= h - sum(total_revenues[k] * decision_vars[k] - (tu * penalty) for k in item_indx)),
                         name="eta_constr{}".format(j))
+        return sw
 
 
 def get_model_data(items):
