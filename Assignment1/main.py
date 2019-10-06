@@ -42,7 +42,8 @@ def main():
     print("Loading properties file")
     properties, output_folder = load_properties()
     orig_stdout = sys.stdout
-    f = open(join(output_folder, "logs.txt"), 'w')
+    f = open(join(output_folder, "logs{}{}{}.txt".format(len(properties["risks"]["cvar"]), properties["penalty"],
+                                                         properties["capacity"])), 'w')
     sys.stdout = f
     print("Starting executing assignment parts")
     # part 1

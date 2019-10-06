@@ -16,3 +16,4 @@ small_run_monte_carlo: 100
 beta: 1
 saa_bernoulli_runs: 200
 saa_runs: 5
+print_gurobi_vars: False

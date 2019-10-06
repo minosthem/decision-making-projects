@@ -25,16 +25,18 @@ def run_gurobi(problem_instances, properties, output_folder):
         scenarios, revenues, probabilities = get_model_data(problem_instance.items)
         print("Executing EV model for instance{}".format(i))
         create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
-                                          penalty=penalty, risk=ev_risk, output_folder=output_folder)
+                                          penalty=penalty, risk=ev_risk, output_folder=output_folder,
+                                          full_print=properties["print_gurobi_vars"])
         for c, cvar_risk in enumerate(cvar_risks):
             print("Executing CVaR model for instance{} and CVaR risk {}".format(i, cvar_risk))
             create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
                                               penalty=penalty,
-                                              risk=cvar_risk, output_folder=output_folder, beta=beta)
+                                              risk=cvar_risk, output_folder=output_folder, beta=beta,
+                                              full_print=properties["print_gurobi_vars"])
 
 
 def create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i, capacity, penalty, risk,
-                                      output_folder, beta=None):
+                                      output_folder, beta=None, full_print=False):
     """
     Method executed for each problem instance. Generates the scenarios for size combinations (dl, dh)
     for all the items. Creates a model for this instance and iterates the possible scenarios
@@ -48,7 +50,8 @@ def create_model_for_problem_instance(scenarios, revenues, probabilities, item_i
     :param risk: model risk
     :param output_folder: the folder to store the model
     :param beta: beta param
-    :return:
+    :param full_print: boolean variable for printing all variable values
+    :return: the created model
     """
     print("Creating model for problem instance {}".format(i))
     model = gb.Model('MILP')
@@ -77,7 +80,7 @@ def create_model_for_problem_instance(scenarios, revenues, probabilities, item_i
     # optimize the model
     model.optimize()
     print("Getting model results")
-    check_model_status(model, i, risk, probabilities, output_folder)
+    check_model_status(model, i, risk, probabilities, output_folder, full_print)
     return model
 
 
@@ -166,7 +169,7 @@ def get_total_revenues(sizes, revenues):
     return total_revenues
 
 
-def check_model_status(model, problem_instance, risk, probabilities, output_folder):
+def check_model_status(model, problem_instance, risk, probabilities, output_folder, full_print=False):
     """
     Checks the result of the model
     :param model: the generated model
@@ -174,23 +177,24 @@ def check_model_status(model, problem_instance, risk, probabilities, output_fold
     :param risk: the model's risk
     :param probabilities: scenarios' probabilities
     :param output_folder: folder to store the model
+    :param full_print: boolean variable for printing all variable values
     :return:
     """
     status = model.status
     if status == gb.GRB.Status.OPTIMAL:
         optimal_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
-                      output_folder=output_folder)
+                      output_folder=output_folder, full_print=full_print)
     elif status == gb.GRB.Status.INFEASIBLE:
         infeasible_model(model=model, problem_instance=problem_instance, risk=risk, output_folder=output_folder)
     elif status == gb.GRB.Status.INF_OR_UNBD:
         inf_or_unb_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
-                         output_folder=output_folder)
+                         output_folder=output_folder, full_print=full_print)
     elif status == gb.GRB.Status.UNBOUNDED:
         unbounded_model(model=model, problem_instance=problem_instance, risk=risk, probabilities=probabilities,
-                        output_folder=output_folder)
+                        output_folder=output_folder, full_print=full_print)
 
 
-def optimal_model(model, problem_instance, risk, probabilities, output_folder):
+def optimal_model(model, problem_instance, risk, probabilities, output_folder, full_print=False):
     """
      Print results for optimal model - Solution found!
     :param model: model for a specific problem instance
@@ -198,11 +202,13 @@ def optimal_model(model, problem_instance, risk, probabilities, output_folder):
     :param risk: the model's risk
     :param probabilities: scenarios' probabilities
     :param output_folder: the folder to store the model
+    :param full_print: boolean variable for printing all variable values
     """
     model_type = "EV" if risk == 0 else "CVaR"
     print("Showing variables and objective function values for problem instance {}".format(problem_instance))
-    for v in model.getVars():
-        print('%s %g' % (v.varName, v.x))
+    if full_print:
+        for v in model.getVars():
+            print('%s %g' % (v.varName, v.x))
     obj = model.getObjective()
     print('Profit: %g' % obj.getValue())
     # mps extension for writing the model itself
@@ -217,6 +223,7 @@ def optimal_model(model, problem_instance, risk, probabilities, output_folder):
                     sum_sw_p += probability * v.x
         for v in model.getVars():
             if "eta" in v.varName:
+                print("Eta value is {}".format(v.x))
                 exp_sw = v.x - ((1 / (1 - risk)) * sum_sw_p)
                 print("Expected sw is {}".format(exp_sw))
 
@@ -240,7 +247,7 @@ def infeasible_model(model, problem_instance, risk, output_folder):
             print('%s' % c.constrName)
 
 
-def inf_or_unb_model(model, problem_instance, risk, probabilities, output_folder):
+def inf_or_unb_model(model, problem_instance, risk, probabilities, output_folder, full_print=False):
     """
     Model is either infeasible or unbounded. Set DualReductions parameter
     to zero in order to get a more precise response and re-optimize. Finally,
@@ -250,13 +257,14 @@ def inf_or_unb_model(model, problem_instance, risk, probabilities, output_folder
     :param risk: the model's risk
     :param probabilities: scenarios' probabilities
     :param output_folder: the folder to store the model
+    :param full_print: boolean variable for printing all variable values
     """
     model.setParam("DualReductions", 0)
     model.optimize()
-    check_model_status(model, problem_instance, risk, probabilities, output_folder)
+    check_model_status(model, problem_instance, risk, probabilities, output_folder, full_print)
 
 
-def unbounded_model(model, problem_instance, risk, probabilities, output_folder):
+def unbounded_model(model, problem_instance, risk, probabilities, output_folder, full_print=False):
     """
     Model is unbounded. Set objective function to zero and re-optimize.
     Check the status of the model again to see if it is feasible
@@ -265,7 +273,8 @@ def unbounded_model(model, problem_instance, risk, probabilities, output_folder)
     :param risk: the model's risk
     :param probabilities: scenarios' probabilities
     :param output_folder: folder to store the model
+    :param full_print: boolean variable for printing all variable values
     """
     model.setObjective(0, gb.GRB.MAXIMIZE)
     model.optimize()
-    check_model_status(model, problem_instance, risk, probabilities, output_folder)
+    check_model_status(model, problem_instance, risk, probabilities, output_folder, full_print)
