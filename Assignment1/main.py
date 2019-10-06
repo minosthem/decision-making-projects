@@ -46,19 +46,24 @@ def main():
                                                          properties["capacity"])), 'w')
     sys.stdout = f
     print("Starting executing assignment parts")
+    step = properties["step"]
     # part 1
     instances = part1.generate_problem_instances(properties=properties)
     # part 2 & 3
-    part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)
-    # part 4 & 5
-    part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
+    if 2 or 3 in step:
+        part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)
+    # part 5
+    if 5 in step:
+        part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
     # part 7 SAA
-    part7.run_sample_average_approximation(instance=instances[0], properties=properties, output_folder=output_folder)
-    print("Running Sample Average Approximation - bonus question")
-    print("=====================================================")
-    # bonus
-    part7.run_sample_average_approximation(instance=instances[0], properties=properties, output_folder=output_folder,
-                                           bonus=True)
+    if 7 in step:
+        part7.run_sample_average_approximation(instance=instances[0], properties=properties,
+                                               output_folder=output_folder)
+        print("Running Sample Average Approximation - bonus question")
+        print("=====================================================")
+        # bonus
+        part7.run_sample_average_approximation(instance=instances[0], properties=properties,
+                                               output_folder=output_folder, bonus=True)
     sys.stdout = orig_stdout
     f.close()
 

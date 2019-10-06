@@ -23,11 +23,12 @@ def run_gurobi(problem_instances, properties, output_folder):
     for i, problem_instance in enumerate(problem_instances):
         item_indx = list(range(len(problem_instance.items)))
         scenarios, revenues, probabilities = get_model_data(problem_instance.items)
-        print("Executing EV model for instance{}".format(i))
-        create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
-                                          penalty=penalty, risk=ev_risk, output_folder=output_folder,
-                                          full_print=properties["print_gurobi_vars"])
-        print("============================================================")
+        if properties["part5_skip_ev"]:
+            print("Executing EV model for instance{}".format(i))
+            create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
+                                              penalty=penalty, risk=ev_risk, output_folder=output_folder,
+                                              full_print=properties["print_gurobi_vars"])
+            print("============================================================")
         for c, cvar_risk in enumerate(cvar_risks):
             print("Executing CVaR model for instance{} and CVaR risk {}".format(i, cvar_risk))
             create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,

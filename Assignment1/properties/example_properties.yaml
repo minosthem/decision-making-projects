@@ -10,10 +10,12 @@ confidence_interval: 0.95
 accuracy: 2
 capacity: 440 # 400 + (4 * group)
 penalty: 61 # 60 + (GROUP / 10)
-output_folder_name: output
-run_full_runs_monte_carlo: True
-small_run_monte_carlo: 100
-beta: 1
-saa_bernoulli_runs: 200
-saa_runs: 5
-print_gurobi_vars: False
+output_folder_name: output # the name of the folder to store the output files
+run_full_runs_monte_carlo: True # execute runs after the small run
+small_run_monte_carlo: 100 # define the number of small runs for Monte Carlo
+beta: 1 # the beta param for CVaR model
+saa_bernoulli_runs: 200 # SAA number of scenarios
+saa_runs: 5 # SAA number of executions
+print_gurobi_vars: False # full print - all gurobi model variables
+part5_skip_ev: True # for CVaR experiments - set to True
+step: [2,3,5,7] # which step(s) to execute - part 1 is always executed, part 2&3 are always executed when one of them is defined in the list
