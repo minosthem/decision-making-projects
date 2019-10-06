@@ -18,8 +18,8 @@ def run_sample_average_approximation(instance, properties, output_folder):
         for i in range(saa_bernoulli_runs):
             new_items = []
             for item in items:
-                bernoulli_res = stats.bernoulli(item.pi).rvs(1)
-                item.size = item.dh if bernoulli_res[0] == 1 else item.dl
+                unif = stats.uniform(0, 1).rvs(1)
+                item.size = item.dh if unif[0] < item.pi else item.dl
                 new_items.append(item.size)
             total_items.append(new_items)
         revenues = [item.r for item in items]

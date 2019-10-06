@@ -154,8 +154,8 @@ def monte_carlo(runs, selected_items, capacity, penalty):
         for j, old_item in enumerate(selected_items):
             item = Item(j)
             item.copy_item(old_item)
-            bernoulli_res = stats.bernoulli(item.pi).rvs(1)
-            item.size = item.dh if bernoulli_res[0] == 1 else item.dl
+            unif = stats.uniform(0, 1).rvs(1)
+            item.size = item.dh if unif[0] < item.pi else item.dl
             new_items.append(item)
         sum_sizes = 0
         total_revenue = 0
