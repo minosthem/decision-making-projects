@@ -27,12 +27,14 @@ def run_gurobi(problem_instances, properties, output_folder):
         create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
                                           penalty=penalty, risk=ev_risk, output_folder=output_folder,
                                           full_print=properties["print_gurobi_vars"])
+        print("============================================================")
         for c, cvar_risk in enumerate(cvar_risks):
             print("Executing CVaR model for instance{} and CVaR risk {}".format(i, cvar_risk))
             create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
                                               penalty=penalty,
                                               risk=cvar_risk, output_folder=output_folder, beta=beta,
                                               full_print=properties["print_gurobi_vars"])
+            print("============================================================")
 
 
 def create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i, capacity, penalty, risk,
@@ -226,6 +228,7 @@ def optimal_model(model, problem_instance, risk, probabilities, output_folder, f
                 print("Eta value is {}".format(v.x))
                 exp_sw = v.x - ((1 / (1 - risk)) * sum_sw_p)
                 print("Expected sw is {}".format(exp_sw))
+    print("============================================================")
 
 
 def infeasible_model(model, problem_instance, risk, output_folder):
