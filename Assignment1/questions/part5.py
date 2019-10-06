@@ -23,7 +23,7 @@ def run_gurobi(problem_instances, properties, output_folder):
     for i, problem_instance in enumerate(problem_instances):
         item_indx = list(range(len(problem_instance.items)))
         scenarios, revenues, probabilities = get_model_data(problem_instance.items)
-        if properties["part5_skip_ev"]:
+        if not properties["part5_skip_ev"]:
             print("Executing EV model for instance{}".format(i))
             create_model_for_problem_instance(scenarios, revenues, probabilities, item_indx, i=i, capacity=capacity,
                                               penalty=penalty, risk=ev_risk, output_folder=output_folder,
