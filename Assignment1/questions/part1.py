@@ -1,5 +1,7 @@
 import numpy as np
-
+import os
+import pickle
+from os.path import join
 from models.Item import Item
 from models.ProblemInstance import ProblemInstance
 
@@ -14,6 +16,8 @@ def generate_problem_instances(properties):
     in order to generate random numbers for the items' sizes.
     :return: a list with all the generated problem instances
     """
+    if problem_instances_exist(properties["problem_instances"], properties["output_folder_name"]):
+        return read_problem_instances(properties["output_folder_name"])
     problem_instances = []
     print("Generating problem instances with items")
     for i in range(properties["problem_instances"]):
@@ -33,6 +37,25 @@ def generate_problem_instances(properties):
             item.r = 51 - j
             instance.items.append(item)
         problem_instances.append(instance)
+        instance_file = join(properties["output_folder_name"], "problem_instance{}".format(i))
+        write_pickle(instance, instance_file)
+    return problem_instances
+
+
+def problem_instances_exist(num_problem_instances, output_folder):
+    count = 0
+    for file in os.listdir(output_folder):
+        if "problem_instance" in file:
+            count += 1
+    return True if count >= num_problem_instances else False
+
+
+def read_problem_instances(output_folder):
+    problem_instances = []
+    for file in os.listdir(output_folder):
+        if "problem_instance" in file:
+            problem_instance = load_pickle(join(output_folder, file))
+            problem_instances.append(problem_instance)
     return problem_instances
 
 
@@ -49,3 +72,23 @@ def generate_triangular_random_numbers(properties, item_iteration):
     mode = 100 + properties["group"] - item_iteration
     right = 110 + properties["group"] - item_iteration
     return np.random.triangular(left=left, mode=mode, right=right, size=properties["item_nums_per_instance"])
+
+
+def load_pickle(path):
+    """
+    Load objects from files
+    :param path: the path to the file
+    :return: the loaded object
+    """
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def write_pickle(o, path):
+    """
+    Write an object to file with pickle library
+    :param o: the object
+    :param path: path to file
+    """
+    with open(path, "wb") as f:
+        return pickle.dump(o, f)

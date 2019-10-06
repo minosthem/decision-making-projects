@@ -23,6 +23,20 @@ class Item:
         else:
             self.position = position
 
+    def __str__(self):
+        representation = ""
+        representation += "Item{\n"
+        representation += "position=" + str(self.position) + ",\n"
+        representation += "dl=" + str(self.dl) + ",\n"
+        representation += "dh" + str(self.dh) + ",\n"
+        representation += "size=" + str(self.size) + ",\n"
+        representation += "revenue=" + str(self.r) + ",\n"
+        representation += "probability=" + str(self.pi) + "}\n"
+        return representation
+
+    def __repr__(self):
+        return self.__str__()
+
     def copy_item(self, item):
         self.pi = item.pi
         self.r = item.r

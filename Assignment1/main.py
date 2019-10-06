@@ -34,6 +34,11 @@ def create_output_folder(properties):
     return output_folder
 
 
+def print_problem_instances(problem_instances):
+    for problem_instance in problem_instances:
+        print(problem_instance)
+
+
 def main():
     """
     The main function used to call all necessary functions
@@ -49,6 +54,7 @@ def main():
     step = properties["step"]
     # part 1
     instances = part1.generate_problem_instances(properties=properties)
+    print(instances)
     # part 2 & 3
     if 2 or 3 in step:
         part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)

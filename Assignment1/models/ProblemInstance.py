@@ -9,3 +9,15 @@ class ProblemInstance:
         if item_list is None:
             item_list = []
         self.items = item_list
+
+    def __str__(self):
+        representation = ''
+        if self.items:
+            representation = "ProblemInstance{"
+            for item in self.items:
+                representation += item.__str__()
+            representation += "},\n"
+        return representation
+
+    def __repr__(self):
+        return self.__str__()
