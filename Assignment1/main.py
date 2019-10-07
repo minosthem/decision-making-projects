@@ -54,13 +54,13 @@ def main():
     step = properties["step"]
     # part 1
     instances = part1.generate_problem_instances(properties=properties)
-    print(instances)
+    # print(instances)
     # part 2 & 3
-    if 2 or 3 in step:
+    if 2 and 3 in step:
         part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)
     # part 5
     if 5 in step:
-        part5.run_gurobi(problem_instances=instances, properties=properties, output_folder=output_folder)
+        part5.run_gurobi(problem_instances=[instances[0]], properties=properties, output_folder=output_folder)
     # part 7 SAA
     if 7 in step:
         part7.run_sample_average_approximation(instance=instances[0], properties=properties,

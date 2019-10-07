@@ -1,0 +1,61 @@
+Part5
+CVaR risk: 0.95
+capacity: 550
+penalty: 61
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Academic license - for non-commercial use only
+Executing scenarios
+Setting total objective function to model 0
+Updating model 0
+Optimizing model 0
+Optimize a model with 4096 rows, 12289 columns and 26624 nonzeros
+Variable types: 2049 continuous, 10240 integer (10240 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 6e+03]
+  Objective range  [7e-06, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [6e+02, 6e+02]
+Found heuristic solution: objective -0.0000000
+Presolve removed 2492 rows and 6002 columns
+Presolve time: 0.02s
+Presolved: 1604 rows, 6287 columns, 12802 nonzeros
+Variable types: 1375 continuous, 4912 integer (4912 binary)
+
+Root relaxation: objective 2.255935e+04, 2670 iterations, 0.05 seconds
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 22559.3468    0  205   -0.00000 22559.3468      -     -    0s
+H    0     0                    22260.352299 22559.3468  1.34%     -    0s
+     0     0 22548.0852    0  278 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0  246 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0   72 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0   60 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0   13 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0   12 22260.3523 22548.0852  1.29%     -    0s
+     0     0 22548.0852    0    2 22260.3523 22548.0852  1.29%     -    0s
+H    0     0                    22548.085227 22548.0852  0.00%     -    0s
+
+Cutting planes:
+  Gomory: 18
+  Cover: 44
+  MIR: 189
+  StrongCG: 3
+
+Explored 1 nodes (4495 simplex iterations) in 0.56 seconds
+Thread count was 8 (of 8 available processors)
+
+Solution count 3: 22548.1 22260.4 -0 
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 2.254808522682e+04, best bound 2.254808522682e+04, gap 0.0000%
+Getting model results
+Showing variables and objective function values for problem instance 0
+Profit: 22548.1
+Eta value is 24684.0
+Expected sw is 15085.851600207547
+============================================================
+============================================================
