@@ -131,8 +131,8 @@ def run_small_monte_carlo(properties, selected_items):
 
 
 def run_full_monte_carlo(properties, selected_items, sn_small_run):
-    print("Running monte carlo simulation")
     monte_carlo_runs = ((1.96 * sn_small_run) / (10 ** -properties["accuracy"])) ** 2
+    print("Running monte carlo simulation for runs {}".format(monte_carlo_runs))
     profits = monte_carlo(monte_carlo_runs, selected_items, properties["capacity"], properties["penalty"])
     m = np.mean(profits)
     print("Profit mean is {}".format(m))
