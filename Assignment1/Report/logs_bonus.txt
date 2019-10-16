@@ -1,0 +1,53 @@
+Running Sample Average Approximation - bonus question
+=====================================================
+Running sample average approximation. Run 0
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Profit: 21050.2
+EV variance of scenario profits for run 0 is 3.800079372790796e-22
+============================================================
+Running sample average approximation. Run 1
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Executing scenarios
+Profit: 21019.3
+EV variance of scenario profits for run 1 is 1.9869925798520525e-22
+============================================================
+Running sample average approximation. Run 2
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Executing scenarios
+Profit: 21069.4
+EV variance of scenario profits for run 2 is 2.575150417531918e-22
+============================================================
+Running sample average approximation. Run 3
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Executing scenarios
+Profit: 21054.9
+EV variance of scenario profits for run 3 is 3.8930661123639426e-22
+============================================================
+Running sample average approximation. Run 4
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Executing scenarios
+Profit: 21065.3
+EV variance of scenario profits for run 4 is 4.6932116359519205e-22
+============================================================
+EV model runs variance is 2.6469779601696887e-24
+EV model lower bound is 21051.814500000033
+EV model upper bound for run 0 is 21062.077500000036
+EV model gap for run 0 is 10.263000000002648
+EV model upper bound for run 1 is 20996.88000000003
+EV model gap for run 1 is -54.93450000000303
+EV model upper bound for run 2 is 21063.942500000034
+EV model gap for run 2 is 12.128000000000611
+EV model upper bound for run 3 is 21050.28750000004
+EV model gap for run 3 is -1.5269999999945867
+EV model upper bound for run 4 is 21061.02750000004
+EV model gap for run 4 is 9.213000000007014

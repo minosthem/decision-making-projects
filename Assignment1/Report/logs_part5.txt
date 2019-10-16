@@ -1,0 +1,101 @@
+Starting executing assignment parts
+Running gurobi for each problem instance
+Executing EV model for instance0
+Creating model for problem instance 0
+Profit: 21031
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Profit: 19529.7
+Eta value is 20033.0
+Expected sw is 17856.873198551322
+============================================================
+Executing EV model for instance1
+Creating model for problem instance 1
+Profit: 21042.1
+============================================================
+Executing CVaR model for instance1 and CVaR risk 0.95
+Creating model for problem instance 1
+Profit: 19464.5
+Eta value is 19954.0
+Expected sw is 17923.17559104766
+============================================================
+Executing EV model for instance2
+Creating model for problem instance 2
+Profit: 21041.1
+============================================================
+Executing CVaR model for instance2 and CVaR risk 0.95
+Creating model for problem instance 2
+Profit: 19508
+Eta value is 19994.0
+Expected sw is 17831.73672095244
+============================================================
+Executing EV model for instance3
+Creating model for problem instance 3
+Profit: 21020.4
+============================================================
+Executing CVaR model for instance3 and CVaR risk 0.95
+Creating model for problem instance 3
+Profit: 19483
+Eta value is 20013.0
+Expected sw is 17949.842102775958
+============================================================
+Executing EV model for instance4
+Creating model for problem instance 4
+Profit: 21032.8
+============================================================
+Executing CVaR model for instance4 and CVaR risk 0.95
+Creating model for problem instance 4
+Profit: 19486
+Eta value is 19948.0
+Expected sw is 17934.973167641678
+============================================================
+Executing EV model for instance5
+Creating model for problem instance 5
+Profit: 21041.7
+============================================================
+Executing CVaR model for instance5 and CVaR risk 0.95
+Creating model for problem instance 5
+Profit: 19513.9
+Eta value is 19964.0
+Expected sw is 18011.94072822835
+============================================================
+Executing EV model for instance6
+Creating model for problem instance 6
+Profit: 21029.7
+============================================================
+Executing CVaR model for instance6 and CVaR risk 0.95
+Creating model for problem instance 6
+Profit: 19549.1
+Eta value is 20034.0
+Expected sw is 17918.312991420604
+============================================================
+Executing EV model for instance7
+Creating model for problem instance 7
+Profit: 21049.5
+============================================================
+Executing CVaR model for instance7 and CVaR risk 0.95
+Creating model for problem instance 7
+Profit: 19510.2
+Eta value is 19945.0
+Expected sw is 17919.505342521155
+============================================================
+Executing EV model for instance8
+Creating model for problem instance 8
+Profit: 20891.7
+============================================================
+Executing CVaR model for instance8 and CVaR risk 0.95
+Creating model for problem instance 8
+Profit: 19550.6
+Eta value is 20070.0
+Expected sw is 17652.044709915805
+============================================================
+Executing EV model for instance9
+Creating model for problem instance 9
+Profit: 21041.2
+============================================================
+Executing CVaR model for instance9 and CVaR risk 0.95
+Creating model for problem instance 9
+Profit: 19530.6
+Eta value is 19988.0
+Expected sw is 17817.29908028197
+============================================================

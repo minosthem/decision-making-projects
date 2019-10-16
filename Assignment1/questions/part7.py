@@ -5,11 +5,6 @@ from scipy import stats
 from questions import part5
 
 
-def sample_variance(values, N):
-    mean_val = sum(values) / len(values)
-    return sum(v - mean_val for v in values)**2 / (N * (N - 1)), mean_val
-
-
 def run_sample_average_approximation(instance, properties, output_folder, bonus=False):
     """
     Executes SAA algorithms for part7 and bonus question. For the latter, only EV model
@@ -58,12 +53,9 @@ def run_sample_average_approximation(instance, properties, output_folder, bonus=
         ev_model = part5.create_model_for_problem_instance(total_items, revenues, probabilities, item_indx, i=0,
                                                            capacity=capacity,
                                                            penalty=penalty, risk=ev_risk, output_folder=output_folder)
-        ev_profits = calc_ev_profits(ev_model, probabilities, total_items, revenues, item_indx, penalty)
-        # ev_profits_mean2 = sum(ev_profits) / len(ev_profits)
-        # ev_variance2 = sum(
-        #    (ev_profits[k] - ev_profits_mean2) ** 2 for k in range(saa_bernoulli_runs)) / saa_bernoulli_runs * (
-        #                      saa_bernoulli_runs - 1)
-        ev_profits_mean, ev_variance = sample_variance(ev_profits, saa_bernoulli_runs)
+        ev_profits = calc_ev_profits(ev_model, total_items, revenues, item_indx, penalty)
+        print("EVPROFS", ev_profits)
+        ev_variance, ev_profits_mean = sample_variance(ev_profits, saa_bernoulli_runs)
         print("EV variance of scenario profits for run {} is {}".format(run, ev_variance))
         ev_upper_bound = ev_profits_mean + 1.64 * sqrt(ev_variance)
         run_dict["ev_upper_bound"] = ev_upper_bound
@@ -78,17 +70,12 @@ def run_sample_average_approximation(instance, properties, output_folder, bonus=
                                                                  capacity=capacity,
                                                                  penalty=penalty,
                                                                  risk=cvar_risk, output_folder=output_folder, beta=beta)
-            cvar_profits = calc_cvar_profits(cvar_model, probabilities, total_items, revenues, item_indx, penalty, beta,
+            cvar_profits = calc_cvar_profits(cvar_model, total_items, revenues, item_indx, penalty, beta,
                                              cvar_risk)
+            print("CVARPROFS", cvar_profits)
             run_dict["cvar_model"] = cvar_model
             run_dict["cvar_profits"] = cvar_profits
             run_dict["cvar_total_profit"] = cvar_model.getObjective().getValue()
-
-            # cvar_profit_mean = sum(cvar_profits) / len(cvar_profits)
-            # print("CVaR profit mean is {}".format(cvar_profit_mean))
-            # cvar_variance = sum(
-            #     (cvar_profits[k] - cvar_profit_mean) ** 2 for k in range(saa_bernoulli_runs)) / saa_bernoulli_runs * (
-            #                         saa_bernoulli_runs - 1)
             cvar_variance, cvar_profit_mean = sample_variance(cvar_profits, saa_bernoulli_runs)
             print("CVaR variance of scenario profits for run {} is {}".format(run, cvar_variance))
             cvar_upper_bound = cvar_profit_mean + (1.64 * sqrt(cvar_variance))
@@ -109,10 +96,6 @@ def get_cvar_model_bounds_and_gap(data_runs, saa_runs):
     cvar_total_profits = []
     for run, data in enumerate(data_runs):
         cvar_total_profits.append(data["cvar_total_profit"])
-    # cvar_total_profit_mean = sum(cvar_total_profits) / len(cvar_total_profits)
-    # cvar_total_variance = sum(
-    #     (cvar_total_profits[i] - cvar_total_profit_mean) ** 2 for i in range(len(cvar_total_profits))) / saa_runs * (
-    #                               saa_runs - 1)
     cvar_total_variance, cvar_total_profit_mean = sample_variance(cvar_total_profits, saa_runs)
     print("CVaR model runs variance is {}".format(cvar_total_variance))
     cvar_lower_bound = cvar_total_profit_mean - (1.84 * sqrt(cvar_total_variance))
@@ -133,10 +116,6 @@ def get_ev_model_bounds_and_gap(data_runs, saa_runs):
     ev_total_profits = []
     for run, data in enumerate(data_runs):
         ev_total_profits.append(data["ev_total_profit"])
-    # ev_total_profit_mean = sum(ev_total_profits) / len(ev_total_profits)
-    # ev_total_variance = sum(
-    #     (ev_total_profits[i] - ev_total_profit_mean) ** 2 for i in range(len(ev_total_profits))) / saa_runs * (
-    #                             saa_runs - 1)
     ev_total_variance, ev_total_profit_mean = sample_variance(ev_total_profits, saa_runs)
     print("EV model runs variance is {}".format(ev_total_variance))
     ev_lower_bound = ev_total_profit_mean - (1.84 * sqrt(ev_total_variance))
@@ -148,12 +127,11 @@ def get_ev_model_bounds_and_gap(data_runs, saa_runs):
         print("EV model gap for run {} is {}".format(run, ev_gap))
 
 
-def calc_ev_profits(model, probabilities, total_items, revenues, item_indx, penalty):
+def calc_ev_profits(model, total_items, revenues, item_indx, penalty):
     """
     Based on the EV model's objective function and the variable values, we calculate
     the profit of each scenario in EV model
     :param model: the created model
-    :param probabilities: the list with the probability of each scenario
     :param total_items: the list of the scenarios (sizes)
     :param revenues: the list of the revenue of each item
     :param item_indx: a list with numbers 0-9
@@ -163,7 +141,6 @@ def calc_ev_profits(model, probabilities, total_items, revenues, item_indx, pena
     profits = []
     for i, scenario in enumerate(total_items):
         total_revenues = part5.get_total_revenues(scenario, revenues)
-        probability = probabilities[i]
         decision_vars = []
         tu = None
         for v in model.getVars():
@@ -171,17 +148,16 @@ def calc_ev_profits(model, probabilities, total_items, revenues, item_indx, pena
                 tu = v.x
             elif "decision_var{}".format(i) in v.varName:
                 decision_vars.append(v.x)
-        scenario_profit = probability * (sum(total_revenues[j] * decision_vars[j] for j in item_indx) - tu * penalty)
+        scenario_profit = sum(total_revenues[j] * decision_vars[j] for j in item_indx) - tu * penalty
         profits.append(scenario_profit)
     return profits
 
 
-def calc_cvar_profits(model, probabilities, total_items, revenues, item_indx, penalty, beta, risk):
+def calc_cvar_profits(model, total_items, revenues, item_indx, penalty, beta, risk):
     """
         Based on the CVaR model's objective function and the variable values, we calculate
         the profit of each scenario in CVaR model
         :param model: the created model
-        :param probabilities: the list with the probability of each scenario
         :param total_items: the list of the scenarios (sizes)
         :param revenues: the list of the revenue of each item
         :param item_indx: a list with numbers 0-9
@@ -193,7 +169,6 @@ def calc_cvar_profits(model, probabilities, total_items, revenues, item_indx, pe
     profits = []
     for i, scenario in enumerate(total_items):
         total_revenues = part5.get_total_revenues(scenario, revenues)
-        probability = probabilities[i]
         decision_vars = []
         tu = None
         h = None
@@ -207,8 +182,13 @@ def calc_cvar_profits(model, probabilities, total_items, revenues, item_indx, pe
                 h = v.x
             elif "sw{}".format(i) in v.varName:
                 sw = v.x
-        scenario_profit = (1 - beta) * probability * (
-                sum(total_revenues[j] * decision_vars[j] for j in item_indx) - tu * penalty) + beta * (
-                                  h - ((1 / (1 - risk)) * probabilities[i] * sw))
+        scenario_profit = (1 - beta) * (
+                    sum(total_revenues[j] * decision_vars[j] for j in item_indx) - tu * penalty) + beta * (
+                                      h - ((1 / (1 - risk)) * sw))
         profits.append(scenario_profit)
     return profits
+
+
+def sample_variance(values, runs):
+    mean_val = sum(values) / len(values)
+    return sum(v - mean_val for v in values) ** 2 / (runs * (runs - 1)), mean_val

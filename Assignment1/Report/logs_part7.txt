@@ -1,0 +1,97 @@
+Running sample average approximation. Run 0
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Profit: 21038.9
+EV variance of scenario profits for run 0 is 4.134157254437137e-22
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 19623.7
+Eta value is 20086.999999999996
+Expected sw is 19037.300000000007
+CVaR variance of scenario profits for run 0 is 2.4241795640247523e-25
+============================================================
+Running sample average approximation. Run 1
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Profit: 20940.5
+EV variance of scenario profits for run 1 is 3.78232616476962e-22
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 18729.8
+Eta value is 19936.0
+Expected sw is 17423.5
+CVaR variance of scenario profits for run 1 is 5.057856127409669e-25
+============================================================
+Running sample average approximation. Run 2
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Profit: 20982.9
+EV variance of scenario profits for run 2 is 4.925138115640407e-22
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 19287.4
+Eta value is 20087.0
+Expected sw is 18188.7
+CVaR variance of scenario profits for run 2 is 5.865915982084587e-25
+============================================================
+Running sample average approximation. Run 3
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Profit: 21060
+EV variance of scenario profits for run 3 is 5.04729481836256e-22
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Executing scenarios
+Profit: 19828
+Eta value is 19935.999999999996
+Expected sw is 19680.144401544403
+CVaR variance of scenario profits for run 3 is 5.8822101931459325e-24
+============================================================
+Running sample average approximation. Run 4
+============================================
+Executing EV model for instance
+Creating model for problem instance 0
+Executing scenarios
+Profit: 20981.2
+EV variance of scenario profits for run 4 is 2.604496624188322e-22
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Executing scenarios
+Profit: 19314.8
+Eta value is 20048.0
+Expected sw is 18216.800000000003
+CVaR variance of scenario profits for run 4 is 3.878687302439604e-24
+============================================================
+EV model runs variance is 6.617444900424222e-25
+EV model lower bound is 21000.688999999977
+EV model upper bound for run 0 is 21041.05500000004
+EV model gap for run 0 is 40.36600000006365
+EV model upper bound for run 1 is 20935.890000000036
+EV model gap for run 1 is -64.79899999994086
+EV model upper bound for run 2 is 20993.850000000042
+EV model gap for run 2 is -6.838999999934458
+EV model upper bound for run 3 is 21048.440000000042
+EV model gap for run 3 is 47.75100000006569
+EV model upper bound for run 4 is 20976.28000000003
+EV model gap for run 4 is -24.40899999994508
+CVaR model runs variance is 1.6543612251060553e-23
+CVaR model lower bound is 19356.734440154436
+CVaR model upper bound for run 0 is 19623.7
+CVaR model gap for run 0 is 266.9655598455647
+CVaR model upper bound for run 1 is 19090.5
+CVaR model gap for run 1 is -266.234440154436
+CVaR model upper bound for run 2 is 19287.4
+CVaR model gap for run 2 is -69.33444015443456
+CVaR model upper bound for run 3 is 19822.672200772206
+CVaR model gap for run 3 is 465.9377606177695
+CVaR model upper bound for run 4 is 19331.800000000003
+CVaR model gap for run 4 is -24.934440154433105
