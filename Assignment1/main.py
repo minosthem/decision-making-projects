@@ -54,7 +54,7 @@ def main():
     step = properties["step"]
     # part 1
     instances = part1.generate_problem_instances(properties=properties)
-    print(instances)
+    # print(instances)
     # part 2 & 3
     if 2 and 3 in step:
         part2And3.run_knapsack_for_problem_instance(instance=instances[0], properties=properties)

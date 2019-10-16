@@ -18,4 +18,4 @@ saa_bernoulli_runs: 200 # SAA number of scenarios
 saa_runs: 5 # SAA number of executions
 print_gurobi_vars: False # full print - all gurobi model variables
 part5_skip_ev: True # for CVaR experiments - set to True
-step: [2,3,5,7] # which step(s) to execute - part 1 is always executed, part 2&3 are always executed when one of them is defined in the list
+step: [2,3,5,7] # which step(s) to execute - part 1 is always executed, part 2&3 should always be in the list together
