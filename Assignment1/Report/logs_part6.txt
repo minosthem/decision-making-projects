@@ -1,0 +1,62 @@
+Part5
+CVaR risk: 0.95
+capacity: 330
+penalty: 61
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 14949.2
+Eta value is 15211.0
+Expected sw is 14681.673390382688
+============================================================
+Part5
+CVaR risk: 0.95
+capacity: 550
+penalty: 61
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 22548.1
+Eta value is 24684.0
+Expected sw is 15085.851600207547
+============================================================
+Part5
+CVaR risk: 0.95
+capacity: 440
+penalty: 40
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 19530.3
+Eta value is 20033.0
+Expected sw is 17861.41633359498
+============================================================
+Part5
+CVaR risk: 0.95
+capacity: 440
+penalty: 75
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.95
+Creating model for problem instance 0
+Profit: 19529.1
+Eta value is 20034.00000000002
+Expected sw is 17846.445470695595
+============================================================
+Part5
+CVaR risk: 0.7, 0.5
+capacity: 440
+penalty: 61
+==========================================
+Executing CVaR model for instance0 and CVaR risk 0.7
+Creating model for problem instance 0
+Profit: 20263.4
+Eta value is 20615.0
+Expected sw is 19838.507273242358
+============================================================
+Executing CVaR model for instance0 and CVaR risk 0.5
+Creating model for problem instance 0
+Executing scenarios
+Profit: 20485.3
+Eta value is 21043.0
+Expected sw is 20058.030979653075
+============================================================
