@@ -2,4 +2,5 @@ possible_states: [Needy, Content]
 queue_params: [d, m]
 possible_priorities: [Low, High]
 servers_num: 2
+server_capacity: 10
 m_value: 1

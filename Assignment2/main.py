@@ -1,4 +1,5 @@
 from os.path import join, exists
+from models.models import Server
 import yaml
 import os
 
@@ -20,6 +21,10 @@ def load_properties():
 
 def main():
     properties = load_properties()
+    servers = []
+    for i in range(properties["servers_num"]):
+        server = Server(properties["server_capacity"])
+        servers.append(server)
 
 
 if __name__ == '__main__':
