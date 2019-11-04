@@ -13,7 +13,6 @@ properties_file = join(properties_folder, "properties.yaml")
 def pprint(msg, change_occured):
     if change_occured:
         print(msg)
-        change_occured = False
 
 
 def load_properties():
@@ -49,13 +48,13 @@ def main():
         servers.append(server)
 
     # function to decide insertion of blocked arrivals to the facility
-    def insert_waiting(max_capacity, source_list, admitted_list, num_served_or_content, new_arrivals_present,
+    def insert_waiting(max_capacity, source_list, admitted_list, num_served_or_content, new_arrivals_created,
                        source_type, num_old_sources):
         capacity = max_capacity - len(admitted_list) - num_served_or_content
         num_sources = len(source_list)
         num_to_insert = min(capacity, num_sources)
         num_newcomers_blocked = 0
-        if new_arrivals_present:
+        if new_arrivals_created:
             num_newcomers = num_sources - num_old_sources
             # how many insertions happened in the newcomers
             num_newcomer_insertions = max(num_to_insert - num_old_sources, 0)
@@ -74,6 +73,8 @@ def main():
         # add new customers
         # boolean noting if new arrivals come at this iteration
         new_arrivals_present = total_arrival_count <= properties["max_total_arrivals"]
+        n_high_old = 0
+        n_low_old = 0
         if new_arrivals_present:
             # count up the new arrivals
             new_low, new_high = get_new_customers(properties)
