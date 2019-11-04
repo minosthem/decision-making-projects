@@ -1,6 +1,3 @@
-possible_states: [Needy, Content]
-queue_params: [d, m]
-possible_priorities: [Low, High]
 poisson_lambda_low_priority: 5
 poisson_lambda_high_priority: 2
 servers_num: 10
