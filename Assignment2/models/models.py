@@ -20,13 +20,13 @@ def get_new_customers(properties):
 
 class Customer:
     arrival_time = 0
-    service_time = 0
-    end_patience_time = 0
-    system_arrival_time = 0
-    prob_to_stay = 0
+    prob_stay = 0
     location = ""
-    state = ""
     priority = ""
+    content_time_needed = 0
+    started_being_content = 0
+    server = None
+    service_time_needed = 0
 
     def __init__(self, arrival_time=now(), prob_stay=0.5, exp_params=(0.5, 0.6), priority="low"):
         self.arrival_time = arrival_time
@@ -84,15 +84,6 @@ class Customer:
     def completed_being_content(self):
         self.content_times.append(self.content_time_needed)
         self.arrival_time = now()
-
-    def move_to(self, location, time, new_service_time):
-        self.location = location
-        self.arrival_time = time
-        self.service_time = new_service_time
-
-    def leave_system(self):
-        self.location = -1
-        self.service_time = -1
 
 
 class Server:
