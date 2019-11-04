@@ -21,7 +21,6 @@ def get_new_customers(properties):
 class Customer:
     arrival_time = 0
     prob_stay = 0
-    location = ""
     priority = ""
     content_time_needed = 0
     started_being_content = 0
@@ -34,7 +33,6 @@ class Customer:
 
         self.priority = priority
         self.prob_stay = prob_stay
-        self.priority = priority
         self.mu, self.delta = exp_params
 
         # durations:
