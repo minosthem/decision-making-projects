@@ -1,18 +1,21 @@
-import numpy as np
 import random
+
+import numpy as np
+
 from utils import now
 
 random.seed(1337)
+
+
 def get_new_customers(properties):
     # poisson
     custs = []
     ll, lh = properties["poisson_lambda_low_priority"], properties["poisson_lambda_high_priority"]
     nl, nh = np.random.poisson(ll), np.random.poisson(lh)
-    priorities =  ["low"] * nl + ["high"] * nh
+    priorities = ["low"] * nl + ["high"] * nh
     for _, pr in zip(range(nl + nh), priorities):
         custs.append(Customer(prob_stay=properties["prob_stay"], exp_params=properties["exp_params"], priority=pr))
     return custs[:nl], custs[nl:]
-
 
 
 class Customer:
@@ -25,7 +28,7 @@ class Customer:
     state = ""
     priority = ""
 
-    def __init__(self, arrival_time=now(), prob_stay=0.5, exp_params=(0.5,0.6), priority="low"):
+    def __init__(self, arrival_time=now(), prob_stay=0.5, exp_params=(0.5, 0.6), priority="low"):
         self.arrival_time = arrival_time
         self.started_being_served_time = None
 
@@ -43,7 +46,8 @@ class Customer:
         self.content_times = []
 
     def get_waiting_times(self):
-        return {"waited": sum(self.wait_times_to_be_served), "served": sum(self.served_times), "content": sum(self.content_times)}
+        return {"waited": sum(self.wait_times_to_be_served), "served": sum(self.served_times),
+                "content": sum(self.content_times)}
 
     def decide_to_leave(self):
         if random.random() < self.prob_stay:
@@ -64,7 +68,7 @@ class Customer:
         self.started_being_served_time = now()
 
     def is_done_being_served(self):
-       return (now() - self.started_being_served_time) >= self.service_time_needed
+        return (now() - self.started_being_served_time) >= self.service_time_needed
 
     def is_done_being_content(self):
         return (now() - self.started_being_content) >= self.content_time_needed
@@ -97,21 +101,9 @@ class Server:
 
     def __init__(self):
         self.occupied = False
+
     def is_occupied(self):
         return self.occupied
+
     def release(self):
         self.occupied, self.customer = False, None
-
-
-class Queue:
-    param = ""
-    service_time = 0
-
-    def __init__(self, param):
-        self.param = param
-        if param == "m":
-            # TODO calculate service time
-            pass
-        elif param == "d":
-            # TODO calculate service time
-            pass

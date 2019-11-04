@@ -1,7 +1,9 @@
 possible_states: [Needy, Content]
 queue_params: [d, m]
 possible_priorities: [Low, High]
-servers_num: 2
-server_capacity: 10
-exp_params: [0.4, 0.7]
-prob_stay: 0.2
+poisson_lambda_low_priority: 5
+poisson_lambda_high_priority: 2
+servers_num: 10
+max_total_arrivals: 20
+exp_params: [0.5, 0.7]
+prob_stay: 0.5
