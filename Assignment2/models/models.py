@@ -27,8 +27,12 @@ class Customer:
     server = None
     service_time_needed = 0
 
+    waited_outside = False
+    waited_inside = False
+
     def __init__(self, arrival_time=now(), prob_stay=0.5, exp_params=(0.5, 0.6), priority="low"):
         self.arrival_time = arrival_time
+        self.became_needy_timestamp = None
         self.started_being_served_time = None
 
         self.priority = priority
@@ -36,6 +40,8 @@ class Customer:
         self.mu, self.delta = exp_params
 
         # durations:
+        # time waiting to enter
+        self.wait_time_to_enter = None
         # times waiting to be served
         self.wait_times_to_be_served = []
         # times during which you are served
@@ -44,7 +50,7 @@ class Customer:
         self.content_times = []
 
     def get_waiting_times(self):
-        return {"waited": sum(self.wait_times_to_be_served), "served": sum(self.served_times),
+        return {"waited_outside":self.wait_time_to_enter, "waited_needy": sum(self.wait_times_to_be_served), "served": sum(self.served_times),
                 "content": sum(self.content_times)}
 
     def decide_to_leave(self):
@@ -60,7 +66,7 @@ class Customer:
         server.customer = self
         server.occupied = True
         # time waited to be served
-        self.wait_times_to_be_served.append(now() - self.arrival_time)
+        self.wait_times_to_be_served.append(now() - self.became_needy_timestamp)
         # compute the time the customer needs
         self.service_time_needed = np.random.exponential(self.mu)
         self.started_being_served_time = now()
@@ -81,8 +87,13 @@ class Customer:
 
     def completed_being_content(self):
         self.content_times.append(self.content_time_needed)
-        self.arrival_time = now()
+        self.become_needy()
 
+    def complete_waiting_outside(self):
+        self.wait_time_to_enter = now() - self.arrival_time
+
+    def become_needy(self):
+        self.became_needy_timestamp = now()
 
 class Server:
     occupied = False
