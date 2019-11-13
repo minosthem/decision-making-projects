@@ -32,22 +32,23 @@ def load_properties():
 
 def main():
     # containers to store timings / delays, the sum for all customers of that type
-    results_h = {"waited_outside": [], "waited_needy": [], "served": [], "content": []}
-    results_l = {"waited_outside": [], "waited_needy": [], "served": [], "content": []}
+    times = {"high" : {"waited_outside": [], "waited_needy": [], "served": [], "content": []},
+             "low" : {"waited_outside": [], "waited_needy": [], "served": [], "content": []}}
 
     # counts per priority: blocking and total arrivals
-    blocks_h, blocks_l = 0, 0
-    total_h, total_l = 0, 0
-
+    blocks_count = {"high": 0, "low": 0}
+    total_count = {"high": 0, "low": 0}
+    waiting_count = {"high": 0, "low": 0}
     # counts per priority of customers that encountered no delay
-    no_delay_h, no_delay_l = 0, 0
+    nodelay_count = {"high": 0, "low": 0}
 
     free_servers_list = []
+    needy_queue_lengths = []
 
     properties = load_properties()
     # container lists
     servers, needy_customers, served_customers, content_customers = [], [], [], []
-    waiting_low, waiting_high = [], []
+    waiting_outside_low, waiting_outside_high = [], []
     total_arrival_count = 0
     change_occurred = True
 
@@ -57,75 +58,62 @@ def main():
         servers.append(server)
 
     # function to decide insertion of blocked arrivals to the facility
-    def insert_waiting(max_total_admitted, source_list, admitted_list, num_served_or_content, new_arrivals_created,
-                       source_type, num_old_sources):
+    def insert_waiting(max_total_admitted, source_list, admitted_list, num_served_or_content, source_type):
         num_sources = len(source_list)
-        num_newcomers_blocked = 0
         inserted = False
         if max_total_admitted is not None:
             capacity = max_total_admitted - len(admitted_list) - num_served_or_content
             num_to_insert = min(capacity, num_sources)
         else:
             num_to_insert = len(source_list)
-        if new_arrivals_created:
-            num_newcomers = num_sources - num_old_sources
-            # how many insertions happened in the newcomers
-            num_newcomer_insertions = max(num_to_insert - num_old_sources, 0)
-            # how many blockings happened in the newcomers
-            num_newcomers_blocked = num_newcomers - num_newcomer_insertions
-            assert num_newcomers_blocked + num_newcomer_insertions == num_newcomers, "???"
-            print("Blocked {} {}-priority customers".format(num_newcomers_blocked, source_type))
         if num_to_insert > 0:
             for _ in range(num_to_insert):
                 cust = source_list.pop(0)
                 cust.complete_waiting_outside()
                 cust.become_needy()
                 admitted_list.append(cust)
+            num_blocked = 0
             # mark all other customers as blocked
             for cust in source_list:
+                if not cust.waited_outside:
+                    # just arrived, and blocked
+                    num_blocked += 1
                 cust.waited_outside = True
+            print("Blocked {} {}-priority customers".format(num_blocked, source_type))
             print("Inserted {}/{} {}-priority customers.".format(num_to_insert, num_sources, source_type))
             inserted = True
-        return num_newcomers_blocked, inserted
+        return inserted
 
     # simulate
     while True:
         # add new customers
         # boolean noting if new arrivals come at this iteration
         new_arrivals_present = total_arrival_count <= properties["max_total_arrivals"]
-        n_high_old = 0
-        n_low_old = 0
         if new_arrivals_present:
             # count up the new arrivals
             new_low, new_high = get_new_customers(properties)
             total_arrival_count += len(new_low) + len(new_high)
             print("**Arrived: {} low and {} high priority customers".format(len(new_low), len(new_high)))
-            # counts before update
-            n_high_old, n_low_old = len(waiting_high), len(waiting_low)
             # update the queues 
-            waiting_low.extend(new_low)
-            waiting_high.extend(new_high)
+            waiting_outside_low.extend(new_low)
+            waiting_outside_high.extend(new_high)
             # count up total arrivals
-            total_h += len(new_high)
-            total_l += len(new_low)
+            total_count["high"] += len(new_high)
+            total_count["low"] += len(new_low)
 
         # let customers enter until capacity
         num_content_or_served = len(content_customers) + len(served_customers)
         pprint("Waiting ||  high: {} low: {}, admitted ||  needy: {}, served: {}, content {}"
-               .format(len(waiting_high), len(waiting_low), len(needy_customers), len(served_customers),
+               .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
                        len(content_customers)), change_occurred)
         # for less verbose printing (eg only if something changed)
         change_occurred = False
 
         # insertion of high priorities
-        bh, change_occurred = insert_waiting(properties["max_total_admitted"], waiting_high, needy_customers, num_content_or_served,
-                            new_arrivals_present, "high", n_high_old)
-        blocks_h += bh
-        bl, change_occurred = insert_waiting(properties["max_total_admitted"], waiting_low, needy_customers, num_content_or_served,
-                            new_arrivals_present, "low", n_low_old)
-        blocks_l += bl
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_high, needy_customers, num_content_or_served, "high")
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_low, needy_customers, num_content_or_served, "low")
         pprint("Waiting ||  high: {} low: {}, admitted ||  needy: {}, served: {}, content {}"
-            .format(len(waiting_high), len(waiting_low), len(needy_customers), len(served_customers),
+            .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
                         len(content_customers)), change_occurred)
         change_occurred = False
 
@@ -134,6 +122,8 @@ def main():
 
         # assign needy customers to free servers
         free_servers_list.append(count_free_servers(servers))
+        needy_queue_lengths.append(len(needy_customers))
+
 
         for s, serv in enumerate(servers):
             if not needy_customers:
@@ -170,15 +160,22 @@ def main():
                     left = customer.decide_to_leave()
                     if left:
                         res = customer.get_waiting_times()
-                        storage = results_h if customer.priority == "high" else results_l
                         for k in res:
-                            storage[k].append(res[k])
-                        if not (customer.waited_inside or customer.waited_outside):
-                            # no delay for the customer
-                            if customer.priority == "high":
-                                no_delay_h +=1
-                            elif customer.priority == "low":
-                                no_delay_l +=1
+                            times[customer.priority][k].append(res[k])
+
+                        # only if burned-in
+                        num_customers_left =  len(times[customer.priority][k])
+                        if num_customers_left > properties["num_burnin"]:
+                            # do counts for probabilities
+                            if not customer.waited_outside:
+                                if not customer.waited_inside:
+                                    # no delay for the customer
+                                    nodelay_count[customer.priority] += 1
+                                else:
+                                    waiting_count[customer.priority] += 1
+                            else:
+                                blocks_count[customer.priority] += 1
+
                         print("Customer {} left".format(customer))
 
                     else:
@@ -199,23 +196,26 @@ def main():
         if not needy_customers and not content_customers and not served_customers:
             break
 
+    burnin = properties["num_burnin"]
+    print("Using burnin: ", burnin)
     print("Done. Total timings:")
 
-    print("High:")
-    for k, v in results_h.items():
-        print(k, ":", sum(v)/len(v))
-    print("Blocked prob {}, i.e. {}/{}".format(blocks_h / total_h, blocks_h, total_h))
-    print("No delay prob {}, i.e. {}/{}".format(no_delay_h / total_h, no_delay_h, total_h))
+    for prior in times:
+        print("####### {}-probability customers:".format(prior))
+        for k, v in times[prior].items():
+            # apply burnin for time durations
+            v = v[burnin:]
+            print(k, ":", sum(v)/len(v))
 
-    print("Low:")
-    for k, v in results_l.items():
-        print(k, ":", sum(v)/len(v))
-    print("Blocked prob {}, i.e. {}/{}".format(blocks_l / total_l, blocks_l, total_l))
-    print("No delay prob {}, i.e. {}/{}".format(no_delay_l / total_l, no_delay_l, total_l))
+        print("Blocked prob {}, i.e. {}/{}".format(blocks_count[prior] / total_count[prior], blocks_count[prior], total_count[prior]))
+        print("Waiting prob {}, i.e. {}/{}".format(waiting_count[prior] / total_count[prior], waiting_count[prior], total_count[prior]))
+        print("No-delay prob {}, i.e. {}/{}".format(nodelay_count[prior] / total_count[prior], nodelay_count[prior], total_count[prior]))
 
+    # apply burnin
+    free_servers_list = free_servers_list[burnin:]
+    needy_queue_lengths = needy_queue_lengths[burnin:]
     print("Mean number of free servers: {}".format(sum(free_servers_list) / len(free_servers_list)))
-
-
+    print("Mean queue length for needy customers: {}".format(sum(needy_queue_lengths) / len(needy_queue_lengths)))
 
 if __name__ == '__main__':
     main()
