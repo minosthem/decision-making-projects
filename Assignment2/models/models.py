@@ -6,19 +6,21 @@ from utils import now
 
 random.seed(1337)
 
-
-def get_new_customers(properties):
+def get_new_customers(properties, num_customers_created):
     # poisson
     custs = []
     ll, lh = properties["poisson_lambda_low_priority"], properties["poisson_lambda_high_priority"]
     nl, nh = np.random.poisson(ll), np.random.poisson(lh)
     priorities = ["low"] * nl + ["high"] * nh
     for _, pr in zip(range(nl + nh), priorities):
-        custs.append(Customer(prob_stay=properties["prob_stay"], exp_params=properties["exp_params"], priority=pr))
-    return custs[:nl], custs[nl:]
+        cust = Customer(arrival_index=num_customers_created, prob_stay=properties["prob_stay"], exp_params=properties["exp_params"], priority=pr)
+        custs.append(cust)
+        num_customers_created += 1
+    return custs[:nl], custs[nl:], num_customers_created
 
 
 class Customer:
+
     arrival_time = 0
     prob_stay = 0
     priority = ""
@@ -30,7 +32,8 @@ class Customer:
     waited_outside = False
     waited_inside = False
 
-    def __init__(self, arrival_time=now(), prob_stay=0.5, exp_params=(0.5, 0.6), priority="low"):
+    def __init__(self, arrival_index, arrival_time=now(), prob_stay=0.5, exp_params=(0.5, 0.6), priority="low"):
+        self.arrival_index = arrival_index
         self.arrival_time = arrival_time
         self.became_needy_timestamp = None
         self.started_being_served_time = None
@@ -49,9 +52,13 @@ class Customer:
         # times during which you are content
         self.content_times = []
 
+    def get_arrival_index(self):
+        return self.arrival_index 
+
     def get_waiting_times(self):
-        return {"waited_outside":self.wait_time_to_enter, "waited_needy": sum(self.wait_times_to_be_served), "served": sum(self.served_times),
-                "content": sum(self.content_times)}
+        return self.wait_time_to_enter, sum(self.wait_times_to_be_served), sum(self.served_times), sum(self.content_times)
+        # return {"waited_outside":self.wait_time_to_enter, "waited_needy": sum(self.wait_times_to_be_served), "served": sum(self.served_times),
+        #         "content": sum(self.content_times)}
 
     def decide_to_leave(self):
         if random.random() < self.prob_stay:
