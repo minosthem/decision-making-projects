@@ -1,3 +1,4 @@
+output_dir: output
 possible_states: [Needy, Content]
 queue_params: [d, m]
 possible_priorities: [Low, High]

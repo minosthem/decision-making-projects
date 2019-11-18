@@ -1,8 +1,9 @@
 import os
 from os.path import join, exists
-from collections import Counter
+
 import pandas
 import yaml
+
 from models.models import Server, get_new_customers
 
 properties_folder = join(os.getcwd(), "properties")
@@ -14,8 +15,10 @@ def pprint(msg, change_occured):
     if change_occured:
         print(msg)
 
+
 def count_free_servers(servers):
-        return len([s for s in servers if not s.is_occupied()])
+    return len([s for s in servers if not s.is_occupied()])
+
 
 def load_properties():
     """
@@ -28,6 +31,12 @@ def load_properties():
     if "max_total_admitted" not in properties:
         properties["max_total_admitted"] = None
     return properties
+
+
+def create_output_dir(properties):
+    output_dir = properties["output_dir"] if properties["output_dir"] else "output"
+    if not exists(output_dir):
+        os.mkdir(output_dir)
 
 
 def main():
@@ -51,6 +60,7 @@ def main():
     # -----------------
 
     properties = load_properties()
+    create_output_dir(properties=properties)
     # container lists
     servers, needy_customers, served_customers, content_customers = [], [], [], []
     waiting_outside_low, waiting_outside_high = [], []
@@ -97,7 +107,9 @@ def main():
         if new_arrivals_present:
             # count up the new arrivals
             new_low, new_high, total_customers_created = get_new_customers(properties, total_customers_created)
-            print("**Arrived: {} low and {} high priority customers, global total {}".format(len(new_low), len(new_high), total_customers_created))
+            print(
+                "**Arrived: {} low and {} high priority customers, global total {}".format(len(new_low), len(new_high),
+                                                                                           total_customers_created))
             # update the queues 
             waiting_outside_low.extend(new_low)
             waiting_outside_high.extend(new_high)
@@ -111,13 +123,14 @@ def main():
         change_occurred = False
 
         # insertion of high priorities
-        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_high, needy_customers, num_content_or_served, "high")
-        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_low, needy_customers, num_content_or_served, "low")
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_high, needy_customers,
+                                         num_content_or_served, "high")
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_low, needy_customers,
+                                         num_content_or_served, "low")
         pprint("Waiting ||  high: {} low: {}, admitted ||  needy: {}, served: {}, content {}"
-            .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
-                        len(content_customers)), change_occurred)
+               .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
+                       len(content_customers)), change_occurred)
         change_occurred = False
-
 
         # counts for mean queue length and free servers statistics
         current_free_servers.append(count_free_servers(servers))
@@ -209,8 +222,11 @@ def main():
     df_loop["number_arrived"] = current_number_of_customers_arrived
     df_loop["number_left"] = current_number_of_customers_left
 
-    df_customers.to_csv("{}_customers.csv".format(properties["run_id"]), index=None)
-    df_loop.to_csv("{}_loops.csv".format(properties["run_id"]), index=None)
+    customer_csv = join(properties["output_dir"], "{}_customers.csv".format(properties["run_id"]))
+    loop_csv = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
+    df_customers.to_csv(customer_csv, index=None)
+    df_loop.to_csv(loop_csv, index=None)
+
 
 if __name__ == '__main__':
     main()
