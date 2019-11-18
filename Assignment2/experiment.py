@@ -1,14 +1,8 @@
-import os
-from os.path import join, exists
+from os.path import join
 
 import pandas
-import yaml
 
 from models.models import Server, get_new_customers
-
-properties_folder = join(os.getcwd(), "properties")
-example_properties_file = join(properties_folder, "example_properties.yaml")
-properties_file = join(properties_folder, "properties.yaml")
 
 
 def pprint(msg, change_occured):
@@ -20,26 +14,7 @@ def count_free_servers(servers):
     return len([s for s in servers if not s.is_occupied()])
 
 
-def load_properties():
-    """
-    Load yaml file containint program's properties
-    :return: the properties dictionary and the output folder path
-    """
-    ffile = properties_file if exists(properties_file) else example_properties_file
-    with open(ffile, 'r') as f:
-        properties = yaml.safe_load(f)
-    if "max_total_admitted" not in properties:
-        properties["max_total_admitted"] = None
-    return properties
-
-
-def create_output_dir(properties):
-    output_dir = properties["output_dir"] if properties["output_dir"] else "output"
-    if not exists(output_dir):
-        os.mkdir(output_dir)
-
-
-def main():
+def run_experiment(properties):
     # containers to store timings / delays, the sum for all customers of that type
     # -----------------
     times_outside, times_needy, times_served, times_content = [], [], [], []
@@ -59,8 +34,6 @@ def main():
 
     # -----------------
 
-    properties = load_properties()
-    create_output_dir(properties=properties)
     # container lists
     servers, needy_customers, served_customers, content_customers = [], [], [], []
     waiting_outside_low, waiting_outside_high = [], []
@@ -226,7 +199,3 @@ def main():
     loop_csv = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
     df_customers.to_csv(customer_csv, index=None)
     df_loop.to_csv(loop_csv, index=None)
-
-
-if __name__ == '__main__':
-    main()

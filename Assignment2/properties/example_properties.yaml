@@ -6,8 +6,6 @@ poisson_lambda_low_priority: 5
 poisson_lambda_high_priority: 2
 servers_num: 4
 num_burnin: 5
-# max_total_admitted: None
-# max_total_admitted: 6
 max_total_arrivals: 25
 exp_params: [0.5, 0.7]
 prob_stay: 0.5
