@@ -1,36 +1,19 @@
-import os
-from os.path import join, exists
-from collections import Counter
+from os.path import join
 import pandas
-import yaml
 from models.models import Server, get_new_customers
-
-properties_folder = join(os.getcwd(), "properties")
-example_properties_file = join(properties_folder, "example_properties.yaml")
-properties_file = join(properties_folder, "properties.yaml")
+import logging
 
 
-def pprint(msg, change_occured):
-    if change_occured:
-        print(msg)
+def pprint(msg, change_occurred, dt):
+    if change_occurred:
+        logging.getLogger().debug("dt: {} | ".format(dt) + msg)
+
 
 def count_free_servers(servers):
-        return len([s for s in servers if not s.is_occupied()])
-
-def load_properties():
-    """
-    Load yaml file containint program's properties
-    :return: the properties dictionary and the output folder path
-    """
-    ffile = properties_file if exists(properties_file) else example_properties_file
-    with open(ffile, 'r') as f:
-        properties = yaml.safe_load(f)
-    if "max_total_admitted" not in properties:
-        properties["max_total_admitted"] = None
-    return properties
+    return len([s for s in servers if not s.is_occupied()])
 
 
-def main():
+def run_experiment(properties):
     # containers to store timings / delays, the sum for all customers of that type
     # -----------------
     times_outside, times_needy, times_served, times_content = [], [], [], []
@@ -50,7 +33,6 @@ def main():
 
     # -----------------
 
-    properties = load_properties()
     # container lists
     servers, needy_customers, served_customers, content_customers = [], [], [], []
     waiting_outside_low, waiting_outside_high = [], []
@@ -75,7 +57,6 @@ def main():
             for _ in range(num_to_insert):
                 cust = source_list.pop(0)
                 cust.complete_waiting_outside()
-                cust.become_needy()
                 admitted_list.append(cust)
             num_blocked = 0
             # mark all other customers as blocked
@@ -84,11 +65,12 @@ def main():
                     # just arrived, and blocked
                     num_blocked += 1
                 cust.waited_outside = True
-            print("Blocked {} {}-priority customers".format(num_blocked, source_type))
-            print("Inserted {}/{} {}-priority customers.".format(num_to_insert, num_sources, source_type))
+            pprint("Blocked {} {}-priority customers".format(num_blocked, source_type), change_occurred, dt)
+            pprint("Inserted {}/{} {}-priority customers.".format(num_to_insert, num_sources, source_type), change_occurred, dt)
             inserted = True
         return inserted
 
+    dt = 0
     # simulate
     while True:
         # add new customers
@@ -97,27 +79,30 @@ def main():
         if new_arrivals_present:
             # count up the new arrivals
             new_low, new_high, total_customers_created = get_new_customers(properties, total_customers_created)
-            print("**Arrived: {} low and {} high priority customers, global total {}".format(len(new_low), len(new_high), total_customers_created))
-            # update the queues 
-            waiting_outside_low.extend(new_low)
-            waiting_outside_high.extend(new_high)
+            if (len(new_high + new_low) > 0):
+                pprint("Arrived: {} low and {} high priority customers, global total {}".format(len(new_low), len(new_high),
+                                                                                            total_customers_created), change_occurred, dt)
+                # update the queues 
+                waiting_outside_low.extend(new_low)
+                waiting_outside_high.extend(new_high)
 
         # let customers enter until capacity
         num_content_or_served = len(content_customers) + len(served_customers)
         pprint("Waiting ||  high: {} low: {}, admitted ||  needy: {}, served: {}, content {}"
                .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
-                       len(content_customers)), change_occurred)
+                       len(content_customers)), change_occurred, dt)
         # for less verbose printing (eg only if something changed)
         change_occurred = False
 
         # insertion of high priorities
-        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_high, needy_customers, num_content_or_served, "high")
-        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_low, needy_customers, num_content_or_served, "low")
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_high, needy_customers,
+                                         num_content_or_served, "high")
+        change_occurred = insert_waiting(properties["max_total_admitted"], waiting_outside_low, needy_customers,
+                                         num_content_or_served, "low")
         pprint("Waiting ||  high: {} low: {}, admitted ||  needy: {}, served: {}, content {}"
-            .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
-                        len(content_customers)), change_occurred)
+               .format(len(waiting_outside_high), len(waiting_outside_low), len(needy_customers), len(served_customers),
+                       len(content_customers)), change_occurred, dt)
         change_occurred = False
-
 
         # counts for mean queue length and free servers statistics
         current_free_servers.append(count_free_servers(servers))
@@ -136,7 +121,7 @@ def main():
                 # assign them to the server
                 customer.become_served(serv)
                 served_customers.append(customer)
-                print("Assigned to server #{}".format(s))
+                pprint("Assigned to server #{}, time needed: {}".format(s, customer.service_time_needed), change_occurred, dt)
                 change_occurred = True
 
         # if there are needy customers remaining, these customers waited in the internal queue
@@ -152,7 +137,7 @@ def main():
                 # check if he's served enough
                 if customer.is_done_being_served():
                     change_occurred = True
-                    print("Server {} completed".format(s))
+                    pprint("Server {} completed".format(s), change_occurred, dt)
                     # release server
                     serv.release()
                     # complete customer service state
@@ -173,10 +158,10 @@ def main():
                         waited_outside.append(customer.waited_outside)
                         waited_inside.append(customer.waited_inside)
 
-                        print("Customer {} left".format(customer))
+                        pprint("Customer {} left".format(customer), change_occurred, dt)
 
                     else:
-                        print("Customer {} is now content".format(customer))
+                        pprint("Customer {} is now content, time needed: {}".format(customer, customer.content_time_needed), change_occurred, dt)
                         customer.become_content()
                         content_customers.append(customer)
 
@@ -188,10 +173,26 @@ def main():
                 content_customers.remove(customer)
                 needy_customers.append(customer)
                 change_occurred = True
-                print("Customer finished being content.")
+                pprint("Customer finished being content.", change_occurred, dt)
 
         if not needy_customers and not content_customers and not served_customers:
+            pprint("All customers consumed!", True, dt)
             break
+
+        # update time
+        for n in needy_customers:
+            n.tick(dt)
+        for s in servers:
+            if s.is_occupied():
+                s.customer.tick(dt)
+        for c in content_customers:
+            c.tick(dt)
+        for w in waiting_outside_high + waiting_outside_low:
+            w.tick(dt)
+
+        pprint("Loop done", True, dt)
+        dt += 1
+
 
     df_customers = pandas.DataFrame()
     df_customers["waited_out"] = times_outside
@@ -209,8 +210,7 @@ def main():
     df_loop["number_arrived"] = current_number_of_customers_arrived
     df_loop["number_left"] = current_number_of_customers_left
 
-    df_customers.to_csv("{}_customers.csv".format(properties["run_id"]), index=None)
-    df_loop.to_csv("{}_loops.csv".format(properties["run_id"]), index=None)
-
-if __name__ == '__main__':
-    main()
+    customer_csv = join(properties["output_dir"], "{}_customers.csv".format(properties["run_id"]))
+    loop_csv = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
+    df_customers.to_csv(customer_csv, index=None)
+    df_loop.to_csv(loop_csv, index=None)
