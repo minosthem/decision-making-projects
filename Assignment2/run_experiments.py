@@ -29,51 +29,76 @@ def create_output_dir(properties):
         os.mkdir(output_dir)
 
 
-def start_execution(n_values, lambda_h, lambda_l, deltas, probability_stay):
+def start_execution(params, loops_mode):
+    """Run all experiments give the parameters"""
     # set the non-changing parameters here
     properties = load_properties()
     create_output_dir(properties=properties)
 
-    # .... and the rest
-    for N in n_values:
-        for lh in lambda_h:
-            for ll in lambda_l:
-                for delta in deltas:
-                    logging.info("Running experiment with params N {} lh {} ll {}".format(N, lh, ll))
-                    run_id = "run_N{}_lh{}_ll{}".format(N, lh, ll)
-                    # set the changing parameters here
-                    properties["delta"] = delta
-                    properties["poisson_lambda_high_priority"] = lh
-                    properties["poisson_lambda_low_priority"] = ll
-                    properties["run_id"] = run_id
-                    # ....
-                    # output file check
-                    outfile = os.path.join(properties["output_dir"], "{}_stats.csv".format(run_id))
-                    if os.path.exists(outfile):
-                        print("Run {} already completed, skipping.".format(run_id))
-                        continue
+    if loops_mode == "combinations":
+        n_values, lambda_h, lambda_l, deltas, probability_stay = params
+        # .... and the rest
+        for N in n_values:
+            for lh in lambda_h:
+                for ll in lambda_l:
+                    for delta in deltas:
+                        for ps in probability_stay:
+                            run_single(properties, (N, lh, ll, delta, ps))
+    elif loops_mode == "fixed":
+        for pars in params:
+            run_single(properties, pars)
+    else:
+        print("bad loop mode")
+        exit(1)
 
-                    # write configuration
-                    with open(properties_file, "w") as f:
-                        yaml.dump(properties, f)
-                    # run the experiment
-                    # either import the run.py as a library
-                    # or run it with sys.cmd or subprocess.run
-                    experiment.run_experiment(properties=properties)
-                    # get output file names (customer, loops)
-                    file_c = join(properties["output_dir"], "{}_customers.csv".format(properties["run_id"]))
-                    file_l = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
-                    # after experiment is done, run the postprocess.py on the resulting files to get desired statistics
-                    postprocess.run(file_c, file_l, properties["output_dir"], run_id, properties["num_burnin"])
 
+def run_single(properties, params):
+    N, lh, ll, delta, ps = params
+    logging.info("Running experiment with params N {} lh {} ll {} d {} ps {}".format(N, lh, ll, d, ps))
+    run_id = "run_N{}_lh{}_ll{}_d{}_ps{}".format(N, lh, ll, delta, ps)
+    # set the changing parameters here
+    properties["delta"] = delta
+    properties["prob_stay"] = ps
+    properties["poisson_lambda_high_priority"] = lh
+    properties["poisson_lambda_low_priority"] = ll
+    properties["run_id"] = run_id
+    # ....
+    # output file check
+    outfile = os.path.join(properties["output_dir"], "{}_stats.csv".format(run_id))
+    if os.path.exists(outfile):
+        print("Run {} already completed, skipping.".format(run_id))
+        return
+
+    # write configuration
+    with open(properties_file, "w") as f:
+        yaml.dump(properties, f)
+    # run the experiment
+    # either import the run.py as a library
+    # or run it with sys.cmd or subprocess.run
+    experiment.run_experiment(properties=properties)
+    # get output file names (customer, loops)
+    file_c = join(properties["output_dir"], "{}_customers.csv".format(properties["run_id"]))
+    file_l = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
+    # after experiment is done, run the postprocess.py on the resulting files to get desired statistics
+    postprocess.run(file_c, file_l, properties["output_dir"], run_id, properties["num_burnin"])
 
 if __name__ == '__main__':
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
     logging.getLogger().debug("TEST")
+
+    # params for all combinations
     n = [5, 10, 20]
     lhs = [0.4, 0.6]
     lls = [0.4, 0.6]
     d = [0.2, 0.3, 0.5]
     prob_stay = [0.2, 0.3, 0.5]
-    start_execution(n, lhs, lls, d, prob_stay)
+    params = n, lhs, lls, d, prob_stay
+    start_execution(params, loops_mode="combinations")
+
+
+    # specified params for n experiments
+    # params = [(n, lhs, lls, d, prob_stay), ...]
+    # params = [(1,2,3,4,5), (1,1,1,1,1)]
+    # # loops=fixed: give
+    # start_execution(params, loops_mode="fixed")

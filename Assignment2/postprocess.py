@@ -3,7 +3,7 @@ import os
 def run(file_customers, file_loops, run_folder, run_id, burnin):
     cust = pandas.read_csv(file_customers)
     # apply burnin
-    cust = cust[cust["arrival_index"].isin(list(range(burnin)))]
+    cust = cust[cust["arrival_index"] >= burnin]
 
     results = []
     for prior in "high low".split():
@@ -17,8 +17,11 @@ def run(file_customers, file_loops, run_folder, run_id, burnin):
         pdin = len(dprior[dprior.delay_in == True]) / len(dprior)
         # prob. no delay
         pnd = len(dprior[dprior.delay_in == False][dprior.delay_out == False]) / len(dprior)
-        keys = [x + "_" + prior for x in "prob_nodelay prob_delayin prob_delayout".split()]
-        results.extend(list(zip(keys, [pnd, pdin, pdout])))
+        wait_in = dprior.mean().waited_in
+        wait_out = dprior.mean().waited_out
+        waited_total = wait_in + wait_out
+        keys = [x + "_" + prior for x in "prob_nodelay prob_delayin prob_delayout mean_waiting_time".split()]
+        results.extend(list(zip(keys, [pnd, pdin, pdout, waited_total])))
 
     loops = pandas.read_csv(file_loops)
 
@@ -30,5 +33,8 @@ def run(file_customers, file_loops, run_folder, run_id, burnin):
             continue
         results.append(("mean_" + k, v))
 
+    results = {k:[v] for (k, v) in results}
+    results = pandas.DataFrame(results)
     stats_file = os.path.join(run_folder, "{}_stats.csv".format(run_id))
     print("Writing run results to {}".format(stats_file))
+    results.to_csv(stats_file, index=None)

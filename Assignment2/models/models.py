@@ -15,8 +15,6 @@ def get_new_customers(properties, num_customers_created):
     customers = {"low": [], "high": []}
     priorities = ["low"] * nl + ["high"] * nh
     # at the first iteration, make sure at least one customer is created
-    if num_customers_created == 0 == nl == nh:
-        nl, priorities = 1, ["low"]
     for _, pr in zip(range(nl + nh), priorities):
         cust = Customer(arrival_index=num_customers_created, prob_stay=properties["prob_stay"], mu=mu, delta=delta, priority=pr)
         customers[pr].append(cust)
@@ -80,7 +78,12 @@ class Customer:
     def reset_time_counter(self):
         self.time_counter = 0
 
-    def become_served(self, server):
+    def compute_service_time_needed(self, num_servers, num_customers_served):
+        if num_customers_served <= num_servers - 1:
+            return num_customers_served * self.mu
+        return num_servers * self.mu
+
+    def become_served(self, server, num_servers, num_customers_served):
         self.server = server
         server.customer = self
         server.occupied = True
@@ -88,7 +91,7 @@ class Customer:
         self.wait_times_to_be_served.append(self.get_time_counter())
         self.reset_time_counter()
         # compute the time the customer needs
-        self.service_time_needed = np.random.exponential(self.mu)
+        self.service_time_needed = self.compute_service_time_needed(num_servers, num_customers_served)
 
     def is_done_being_served(self):
         return self.time_counter >= self.service_time_needed
@@ -99,9 +102,9 @@ class Customer:
     def completed_being_served(self):
         self.served_times.append(self.service_time_needed)
 
-    def become_content(self):
+    def become_content(self, num_customers_content):
         # calculate content duration
-        self.content_time_needed = np.random.exponential(self.delta)
+        self.content_time_needed = self.delta * num_customers_content
         self.reset_time_counter()
 
     def completed_being_content(self):
