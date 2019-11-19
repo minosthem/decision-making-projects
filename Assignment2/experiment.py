@@ -9,6 +9,7 @@ def pprint(msg, change_occurred, dt):
         logging.getLogger().debug("dt: {} | ".format(dt) + msg)
 
 
+
 def count_free_servers(servers):
     return len([s for s in servers if not s.is_occupied()])
 
