@@ -1,5 +1,6 @@
 import pandas
 import os
+import math
 
 
 def run(file_customers, file_loops, run_folder, run_id, burnin, max_total_admitted):
@@ -11,19 +12,25 @@ def run(file_customers, file_loops, run_folder, run_id, burnin, max_total_admitt
     for prior in "high low".split():
         dprior = cust[cust.priority == prior]
         if len(dprior) == 0:
-            pdout, pdin, pnd = 0, 0, 0
-            continue
-        # prob. of delay out
-        pdout = len(dprior[dprior.delay_out == True]) / len(dprior)
-        # prob. of delay in
-        pdin = len(dprior[dprior.delay_in == True]) / len(dprior)
-        # prob. no delay
-        pnd = len(dprior[dprior.delay_in == False][dprior.delay_out == False]) / len(dprior)
-        wait_in = dprior.mean().waited_in
-        wait_out = dprior.mean().waited_out
-        waited_total = wait_in + wait_out
-        keys = [x + "_" + prior for x in "prob_nodelay prob_delayin prob_delayout mean_waiting_time".split()]
-        results.extend(list(zip(keys, [pnd, pdin, pdout, waited_total])))
+            pdout, pdin, pnd, waits_mean, conf_int = 0, 0, 0, 0, (0, 0)
+        else:
+            # prob. of delay out
+            pdout = len(dprior[dprior.delay_out == True]) / len(dprior)
+            # prob. of delay in
+            pdin = len(dprior[dprior.delay_in == True]) / len(dprior)
+            # prob. no delay
+            pnd = len(dprior[dprior.delay_in == False][dprior.delay_out == False]) / len(dprior)
+
+            waits = dprior.waited_in + dprior.waited_out
+
+            waits_mean = waits.mean()
+            waits_var = waits.var()
+
+            offset = 1.96 * math.sqrt(waits_var / 1000)
+            conf_int = waits_mean - offset, waits_mean + offset
+
+        keys = [x + "_" + prior for x in "prob_nodelay prob_delayin prob_delayout mean_waiting_time conf_int".split()]
+        results.extend(list(zip(keys, [pnd, pdin, pdout, waits_mean, conf_int])))
 
     loops = pandas.read_csv(file_loops)
 

@@ -184,8 +184,10 @@ def run_experiment(properties):
                 change_occurred = True
                 pprint("Customer finished being content.", change_occurred, loop_counter)
 
-        if total_customers_created >= properties["max_total_arrivals"]:
-            pprint("All customers consumed!", True, loop_counter)
+        if total_customers_created >= properties["max_total_arrivals"] and not \
+            (needy_customers or content_customers or served_customers or waiting_outside_high or waiting_outside_low):
+
+            pprint("All {} customers consumed, processed and left!".format(total_customers_created), True, loop_counter)
             break
 
         # update time
