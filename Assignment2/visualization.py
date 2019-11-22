@@ -11,10 +11,6 @@ def visualize(output_folder):
             df = pd.read_csv(join(output_folder, file))
             row = [df["mean_waiting_time_high"], df["mean_waiting_time_low"], df["max_total_admitted"]]
             dataframe.loc[len(dataframe)] = row
-    # fig, ax = plt.subplots(1, 1)
-    # df = pd.DataFrame(dataframe, columns=['mean_waiting_time_high', 'mean_waiting_time_low'])
-    # ax.get_xaxis().set_visible(False)
-    # df.plot(table=True, ax=ax)
 
     plt.plot(dataframe["max_total_admitted"], dataframe["mean_waiting_time_high"], label='mean_waiting_time_high')
     plt.plot(dataframe["max_total_admitted"], dataframe["mean_waiting_time_low"], label='mean_waiting_time_low')
