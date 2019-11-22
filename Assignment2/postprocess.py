@@ -1,6 +1,8 @@
 import pandas
 import os
-def run(file_customers, file_loops, run_folder, run_id, burnin):
+
+
+def run(file_customers, file_loops, run_folder, run_id, burnin, max_total_admitted):
     cust = pandas.read_csv(file_customers)
     # apply burnin
     cust = cust[cust["arrival_index"] >= burnin]
@@ -33,8 +35,9 @@ def run(file_customers, file_loops, run_folder, run_id, burnin):
             continue
         results.append(("mean_" + k, v))
 
-    results = {k:[v] for (k, v) in results}
+    results = {k: [v] for (k, v) in results}
     results = pandas.DataFrame(results)
+    results["max_total_admitted"] = max_total_admitted
     stats_file = os.path.join(run_folder, "{}_stats.csv".format(run_id))
     print("Writing run results to {}".format(stats_file))
     results.to_csv(stats_file, index=None)

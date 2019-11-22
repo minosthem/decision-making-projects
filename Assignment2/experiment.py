@@ -9,7 +9,6 @@ def pprint(msg, change_occurred, dt):
         logging.getLogger().debug("loop: {} | ".format(dt) + msg)
 
 
-
 def count_free_servers(servers):
     return len([s for s in servers if not s.is_occupied()])
 
@@ -47,7 +46,8 @@ def run_experiment(properties):
         servers.append(server)
 
     # function to decide insertion of blocked arrivals to the facility
-    def insert_waiting(max_total_admitted, source_list, admitted_list, num_served_or_content, source_type, loop_counter):
+    def insert_waiting(max_total_admitted, source_list, admitted_list, num_served_or_content, source_type,
+                       loop_counter):
         num_sources = len(source_list)
         inserted = False
         if max_total_admitted is not None:
@@ -68,7 +68,8 @@ def run_experiment(properties):
                     num_blocked += 1
                 cust.waited_outside = True
             pprint("Blocked {} {}-priority customers".format(num_blocked, source_type), change_occurred, loop_counter)
-            pprint("Inserted {}/{} {}-priority customers.".format(num_to_insert, num_sources, source_type), change_occurred, loop_counter)
+            pprint("Inserted {}/{} {}-priority customers.".format(num_to_insert, num_sources, source_type),
+                   change_occurred, loop_counter)
             inserted = True
         return inserted
 
@@ -81,9 +82,11 @@ def run_experiment(properties):
         if new_arrivals_present:
             # count up the new arrivals
             new_low, new_high, total_customers_created = get_new_customers(properties, total_customers_created)
-            if (len(new_high + new_low) > 0):
-                pprint("Arrived: {} low and {} high priority customers, global total {}".format(len(new_low), len(new_high),
-                                                                                            total_customers_created), change_occurred, loop_counter)
+            if len(new_high + new_low) > 0:
+                pprint("Arrived: {} low and {} high priority customers, global total {}".format(len(new_low),
+                                                                                                len(new_high),
+                                                                                                total_customers_created),
+                       change_occurred, loop_counter)
                 # update the queues 
                 waiting_outside_low.extend(new_low)
                 waiting_outside_high.extend(new_high)
@@ -124,7 +127,8 @@ def run_experiment(properties):
                 # assign them to the server
                 customer.become_served(serv, len(servers), current_num_customers_served)
                 served_customers.append(customer)
-                pprint("Assigned to server #{}, time needed: {}".format(s, customer.service_time_needed), change_occurred, loop_counter)
+                pprint("Assigned to server #{}, time needed: {}".format(s, customer.service_time_needed),
+                       change_occurred, loop_counter)
                 change_occurred = True
 
         # if there are needy customers remaining, these customers waited in the internal queue
@@ -164,7 +168,9 @@ def run_experiment(properties):
                         pprint("Customer {} left".format(customer), change_occurred, loop_counter)
 
                     else:
-                        pprint("Customer {} is now content, time needed: {}".format(customer, customer.content_time_needed), change_occurred, loop_counter)
+                        pprint("Customer {} is now content, time needed: {}".format(customer,
+                                                                                    customer.content_time_needed),
+                               change_occurred, loop_counter)
                         customer.become_content(len(content_customers))
                         content_customers.append(customer)
 
@@ -195,7 +201,6 @@ def run_experiment(properties):
 
         pprint("Loop done", True, loop_counter)
         loop_counter += 1
-
 
     df_customers = pandas.DataFrame()
     df_customers["waited_out"] = times_outside

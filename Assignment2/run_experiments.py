@@ -81,7 +81,8 @@ def run_single(properties, params):
     file_c = join(properties["output_dir"], "{}_customers.csv".format(properties["run_id"]))
     file_l = join(properties["output_dir"], "{}_loops.csv".format(properties["run_id"]))
     # after experiment is done, run the postprocess.py on the resulting files to get desired statistics
-    postprocess.run(file_c, file_l, properties["output_dir"], run_id, properties["num_burnin"])
+    postprocess.run(file_c, file_l, properties["output_dir"], run_id, properties["num_burnin"],
+                    properties["max_total_admitted"])
 
 
 if __name__ == '__main__':
@@ -100,6 +101,12 @@ if __name__ == '__main__':
 
     # specified params for n experiments
     # params = [(n, lhs, lls, d, prob_stay), ...]
-    params = [(200, 0.6, 1.1, 0.7, 0.4), (200, 0.5, 1.2, 0.7, 0.8), (200, 0.5, 1.2, 0.7, 0.2), (200, 0.5, 1.2, 0.9, 0.4), (200, 0.5, 1.2, 0.5, 0.4), (400, 0.5, 1.2, 0.7, 0.4), (100, 0.5, 1.2, 0.7, 0.4), (200, 1.2, 0.5, 0.7, 0.8), (200, 1.2, 0.5, 0.7, 0.2), (200, 1.2, 0.5, 0.9, 0.4), (200, 1.2, 0.5, 0.5, 0.4), (400, 1.2, 0.5, 0.7, 0.4), (100, 1.2, 0.5, 0.7, 0.4), (200, 0.5, 1.2, 0.5, 0.2), (100, 0.5, 1.2, 0.9, 0.8), (200, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.5, 0.2), (100, 1.2, 0.5, 1.1, 0.8)]
+    params = [(200, 0.6, 1.1, 0.7, 0.4), (200, 0.5, 1.2, 0.7, 0.8), (200, 0.5, 1.2, 0.7, 0.2),
+              (200, 0.5, 1.2, 0.9, 0.4), (200, 0.5, 1.2, 0.5, 0.4), (400, 0.5, 1.2, 0.7, 0.4),
+              (100, 0.5, 1.2, 0.7, 0.4), (200, 1.2, 0.5, 0.7, 0.8), (200, 1.2, 0.5, 0.7, 0.2),
+              (200, 1.2, 0.5, 0.9, 0.4), (200, 1.2, 0.5, 0.5, 0.4), (400, 1.2, 0.5, 0.7, 0.4),
+              (100, 1.2, 0.5, 0.7, 0.4), (200, 0.5, 1.2, 0.5, 0.2), (100, 0.5, 1.2, 0.9, 0.8),
+              (200, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.5, 0.2),
+              (100, 1.2, 0.5, 1.1, 0.8)]
     # # loops=fixed: give
     start_execution(params, loops_mode="fixed")
