@@ -54,7 +54,7 @@ def start_execution(params, loops_mode):
 
 def run_single(properties, params):
     N, lh, ll, delta, ps = params
-    logging.info("Running experiment with params N {} lh {} ll {} d {} ps {}".format(N, lh, ll, d, ps))
+    logging.info("Running experiment with params N {} lh {} ll {} d {} ps {}".format(N, lh, ll, delta, ps))
     run_id = "run_N{}_lh{}_ll{}_d{}_ps{}".format(N, lh, ll, delta, ps)
     # set the changing parameters here
     properties["delta"] = delta
@@ -62,6 +62,7 @@ def run_single(properties, params):
     properties["poisson_lambda_high_priority"] = lh
     properties["poisson_lambda_low_priority"] = ll
     properties["run_id"] = run_id
+    properties["max_total_admitted"] = N
     # ....
     # output file check
     outfile = os.path.join(properties["output_dir"], "{}_stats.csv".format(run_id))
@@ -82,23 +83,23 @@ def run_single(properties, params):
     # after experiment is done, run the postprocess.py on the resulting files to get desired statistics
     postprocess.run(file_c, file_l, properties["output_dir"], run_id, properties["num_burnin"])
 
+
 if __name__ == '__main__':
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
     logging.getLogger().debug("TEST")
 
     # params for all combinations
-    n = [5, 10, 20]
-    lhs = [0.4, 0.6]
-    lls = [0.4, 0.6]
-    d = [0.2, 0.3, 0.5]
-    prob_stay = [0.2, 0.3, 0.5]
-    params = n, lhs, lls, d, prob_stay
-    start_execution(params, loops_mode="combinations")
-
+    # n = [5, 10, 20]
+    # lhs = [0.4, 0.6]
+    # lls = [0.4, 0.6]
+    # d = [0.2, 0.3, 0.5]
+    # prob_stay = [0.2, 0.3, 0.5]
+    # params = n, lhs, lls, d, prob_stay
+    # start_execution(params, loops_mode="combinations")
 
     # specified params for n experiments
     # params = [(n, lhs, lls, d, prob_stay), ...]
-    # params = [(1,2,3,4,5), (1,1,1,1,1)]
+    params = [(200, 0.6, 1.1, 0.7, 0.4), (200, 0.5, 1.2, 0.7, 0.8), (200, 0.5, 1.2, 0.7, 0.2), (200, 0.5, 1.2, 0.9, 0.4), (200, 0.5, 1.2, 0.5, 0.4), (400, 0.5, 1.2, 0.7, 0.4), (100, 0.5, 1.2, 0.7, 0.4), (200, 1.2, 0.5, 0.7, 0.8), (200, 1.2, 0.5, 0.7, 0.2), (200, 1.2, 0.5, 0.9, 0.4), (200, 1.2, 0.5, 0.5, 0.4), (400, 1.2, 0.5, 0.7, 0.4), (100, 1.2, 0.5, 0.7, 0.4), (200, 0.5, 1.2, 0.5, 0.2), (100, 0.5, 1.2, 0.9, 0.8), (200, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.9, 0.8), (100, 1.2, 0.5, 0.5, 0.2), (100, 1.2, 0.5, 1.1, 0.8)]
     # # loops=fixed: give
-    # start_execution(params, loops_mode="fixed")
+    start_execution(params, loops_mode="fixed")

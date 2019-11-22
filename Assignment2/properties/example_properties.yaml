@@ -2,10 +2,10 @@ output_dir: output
 poisson_lambda_low_priority: 5
 poisson_lambda_high_priority: 2
 servers_num: 2
-num_burnin: 5
-max_total_arrivals: 25
+num_burnin: 200
+max_total_arrivals: 1200
 prob_stay: 0.5
 mu: 1
-dt: 0
+dt: 1
 # max_total_admitted: None
 # max_total_admitted: 6
