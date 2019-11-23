@@ -42,6 +42,7 @@ def visualize(output_folder):
     all_dfs = []
     for file in glob.glob("{}/*_stats.csv".format(output_folder)):
         df = pd.read_csv(file)
+        print(file)
         all_dfs.append(df)
         row = [df["mean_waiting_time_high"].item(), df["mean_waiting_time_low"].item(), df["max_total_admitted"].item()]
         print(row)
@@ -49,6 +50,7 @@ def visualize(output_folder):
             nan_admitted_info = row
         else:
             dataframe.loc[len(dataframe)] = row
+            dataframe = dataframe.sort_values("max_total_admitted")
 
     xlabels = dataframe["max_total_admitted"]
     plotstyle = "*" if len(dataframe) == 1 else "-"
@@ -69,4 +71,4 @@ def visualize(output_folder):
     print_latex_table(pd.concat(all_dfs))
 
 if __name__ == '__main__':
-    visualize("runs")
+    visualize("C:/Users/Konstantinos/Desktop/Tilburg University/Assignment_1/decision-making-projects/Assignment2/output")

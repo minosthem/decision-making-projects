@@ -101,6 +101,6 @@ if __name__ == '__main__':
 
     # specified params for n experiments
     # params = [(n, lhs, lls, d, prob_stay), ...]
-    params = [(200, 0.6, 1.1, 0.7, 0.4), (300, 0.6, 1.1, 0.7, 0.4), (None, 0.6, 1.1, 0.7, 0.4)]
+    params = [(None, 0.6, 1.1, 0.7, 0.4)]
     # # loops=fixed: give
     start_execution(params, loops_mode="fixed")
